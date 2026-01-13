@@ -1,15 +1,24 @@
 # frozen_string_literal: true
 
+puts '[WIPPLI config.ru] Starting DocuSeal with iframe embedding patch...'
+
+# WIPPLI: Load patch BEFORE Rails environment
+require_relative 'lib/wippli_patch'
+
 require_relative 'config/environment'
 
-# WIPPLI: Rack middleware to strip X-Frame-Options header
+# WIPPLI: Rack middleware to strip X-Frame-Options header (backup layer)
+puts '[WIPPLI config.ru] Adding Rack middleware backup layer...'
 use(Class.new do
   def initialize(app)
     @app = app
+    puts '[WIPPLI Middleware] Initialized'
   end
 
   def call(env)
     status, headers, body = @app.call(env)
+
+    puts "[WIPPLI Middleware] Processing response, headers before: #{headers.keys.join(', ')}"
 
     # Remove all variations of X-Frame-Options
     headers.delete_if { |k, _| k.to_s.downcase == 'x-frame-options' }
@@ -21,11 +30,14 @@ use(Class.new do
     end
 
     # Proof header
-    headers['X-Wippli-Rack-v2'] = 'active'
+    headers['X-Wippli-Middleware'] = 'v3-active'
+
+    puts "[WIPPLI Middleware] Headers after: #{headers.keys.join(', ')}"
 
     [status, headers, body]
   end
 end)
 
+puts '[WIPPLI config.ru] Running Rails application...'
 run Rails.application
 Rails.application.load_server
