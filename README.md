@@ -4,9 +4,17 @@
       <img  alt="DocuSeal" src="https://github.com/docusealco/docuseal/assets/5418788/c12cd051-81cd-4402-bc3a-92f2cfdc1b06" width="80" />
       <br>
     </a>
-    DocuSeal
+    DocuSeal - Wippli Modified Version
   </div>
 </h1>
+
+> **⚠️ MODIFIED VERSION**: This is a Wippli-modified fork of DocuSeal with iframe embedding support for integration with the Wippli platform.
+>
+> - **Original Project**: [docusealco/docuseal](https://github.com/docusealco/docuseal)
+> - **Modifications**: See [MODIFICATIONS.md](./MODIFICATIONS.md)
+> - **License**: AGPL-3.0 (same as original)
+> - **Source Code**: This repository contains all modifications as required by AGPL-3.0 Section 13
+
 <h3 align="center">
   Open source document filling and signing
 </h3>
