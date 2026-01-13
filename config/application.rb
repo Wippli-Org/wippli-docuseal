@@ -15,6 +15,9 @@ require_relative '../lib/normalize_client_ip_middleware'
 
 Bundler.require(*Rails.groups)
 
+# WIPPLI: Load Rack::Response patch for iframe embedding
+require_relative '../lib/wippli_patch'
+
 module DocuSeal
   class Application < Rails::Application
     config.load_defaults 8.0
