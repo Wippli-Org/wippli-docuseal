@@ -15,6 +15,9 @@ class ApplicationController < ActionController::Base
 
   before_action :set_csp, if: -> { request.get? && !request.headers['HTTP_X_TURBO'] }
 
+  # WIPPLI: Allow iframe embedding from Wippli domains
+  after_action :remove_frame_options_for_wippli
+
   helper_method :button_title,
                 :current_account,
                 :form_link_host,
@@ -127,6 +130,10 @@ class ApplicationController < ActionController::Base
   end
 
   def set_csp
+    # WIPPLI: Remove X-Frame-Options header to allow iframe embedding
+    response.headers.delete('X-Frame-Options')
+    response.headers['X-Wippli-CSP-Fix'] = 'active'
+
     request.content_security_policy = current_content_security_policy.tap do |policy|
       policy.default_src :self
       policy.script_src :self
@@ -139,7 +146,21 @@ class ApplicationController < ActionController::Base
       policy.worker_src :self, :blob
       policy.connect_src :self
 
+      # WIPPLI: Add frame-ancestors to allow iframe embedding from Wippli domains
+      policy.frame_ancestors :self, '*.wippli.ai', 'app.wippli.ai', 'dev.wippli.ai', 'localhost:*'
+
       policy.directives['connect-src'] << 'ws:' if Rails.env.development?
     end
+  end
+
+  def remove_frame_options_for_wippli
+    # Remove X-Frame-Options header to allow iframe embedding
+    response.headers.delete('X-Frame-Options')
+
+    # Add Content-Security-Policy with frame-ancestors for Wippli domains
+    response.headers['Content-Security-Policy'] = "frame-ancestors 'self' *.wippli.ai app.wippli.ai dev.wippli.ai localhost:*"
+
+    # Add test header to verify this method is running
+    response.headers['X-Wippli-Controller-Fix'] = 'active'
   end
 end

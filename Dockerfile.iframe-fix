@@ -1,0 +1,13 @@
+# Quick fix: Just replace production.rb in the official DocuSeal image
+FROM docuseal/docuseal:1.5.2
+
+# Copy our modified production.rb with iframe fix
+COPY ./config/environments/production.rb /app/config/environments/production.rb
+
+# Copy initializer with inlined middleware (removes X-Frame-Options)
+COPY ./config/initializers/zzz_iframe_policy.rb /app/config/initializers/zzz_iframe_policy.rb
+
+# Clear bootsnap cache to ensure our changes are loaded
+RUN rm -rf /app/tmp/cache/bootsnap*
+
+# That's it! Container will restart with new config

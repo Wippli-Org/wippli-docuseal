@@ -26,6 +26,10 @@ Rails.application.configure do
   config.consider_all_requests_local       = false
   config.action_controller.perform_caching = true
 
+  # Allow iframe embedding from Wippli domains
+  config.action_dispatch.default_headers.delete('X-Frame-Options')
+  config.action_dispatch.default_headers['Content-Security-Policy'] = "frame-ancestors 'self' *.wippli.ai app.wippli.ai dev.wippli.ai localhost:*"
+
   config.active_job.queue_adapter = :sidekiq
 
   # Ensures that a master key has been made available in either ENV["RAILS_MASTER_KEY"]
