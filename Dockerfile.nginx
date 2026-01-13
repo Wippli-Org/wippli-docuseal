@@ -1,0 +1,55 @@
+# WIPPLI: Multi-stage Dockerfile with NGINX reverse proxy to strip X-Frame-Options header
+FROM ruby:3.4.2-alpine AS base
+
+# Install nginx and supervisor
+RUN apk add --no-cache nginx supervisor
+
+# Build DocuSeal (copy from official build process)
+FROM wippliacr.azurecr.io/docuseal:wippli-debug-v3 AS docuseal
+
+# Final image with NGINX + DocuSeal
+FROM base
+
+# Copy DocuSeal from previous image
+COPY --from=docuseal /app /app
+COPY --from=docuseal /fonts /fonts
+COPY --from=docuseal /data /data
+
+# Copy NGINX configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Create supervisor config to run both NGINX and Puma
+RUN mkdir -p /var/log/supervisor /var/log/nginx
+
+# Supervisor configuration
+RUN echo "[supervisord]" > /etc/supervisord.conf && \
+    echo "nodaemon=true" >> /etc/supervisord.conf && \
+    echo "logfile=/var/log/supervisor/supervisord.log" >> /etc/supervisord.conf && \
+    echo "" >> /etc/supervisord.conf && \
+    echo "[program:docuseal]" >> /etc/supervisord.conf && \
+    echo "command=/app/bin/bundle exec puma /app/config.ru -C /app/config/puma.rb" >> /etc/supervisord.conf && \
+    echo "directory=/app" >> /etc/supervisord.conf && \
+    echo "autostart=true" >> /etc/supervisord.conf && \
+    echo "autorestart=true" >> /etc/supervisord.conf && \
+    echo "stdout_logfile=/dev/stdout" >> /etc/supervisord.conf && \
+    echo "stdout_logfile_maxbytes=0" >> /etc/supervisord.conf && \
+    echo "stderr_logfile=/dev/stderr" >> /etc/supervisord.conf && \
+    echo "stderr_logfile_maxbytes=0" >> /etc/supervisord.conf && \
+    echo "" >> /etc/supervisord.conf && \
+    echo "[program:nginx]" >> /etc/supervisord.conf && \
+    echo "command=/usr/sbin/nginx -g 'daemon off;'" >> /etc/supervisord.conf && \
+    echo "autostart=true" >> /etc/supervisord.conf && \
+    echo "autorestart=true" >> /etc/supervisord.conf && \
+    echo "stdout_logfile=/dev/stdout" >> /etc/supervisord.conf && \
+    echo "stdout_logfile_maxbytes=0" >> /etc/supervisord.conf && \
+    echo "stderr_logfile=/dev/stderr" >> /etc/supervisord.conf && \
+    echo "stderr_logfile_maxbytes=0" >> /etc/supervisord.conf
+
+WORKDIR /data/docuseal
+ENV WORKDIR=/data/docuseal
+
+# Expose NGINX port (not Puma port 3000)
+EXPOSE 8080
+
+# Start both services with supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
