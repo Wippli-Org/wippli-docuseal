@@ -2,10 +2,9 @@
 
 puts '[WIPPLI config.ru] Starting DocuSeal with iframe embedding patch...'
 
-# WIPPLI: Load patch BEFORE Rails environment
-require_relative 'lib/wippli_patch'
-
+# WIPPLI: Load Rails environment first, then apply patch
 require_relative 'config/environment'
+require_relative 'lib/wippli_patch'
 
 # WIPPLI: Rack middleware to strip X-Frame-Options header (backup layer)
 puts '[WIPPLI config.ru] Adding Rack middleware backup layer...'
