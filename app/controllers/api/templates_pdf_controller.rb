@@ -31,9 +31,10 @@ module Api
       end
 
       # Wippli: Set submitters if provided in params (replace default)
-      if params[:submitters].present?
-        template.submitters = params[:submitters].map do |submitter_param|
-          role_name = submitter_param[:role] || submitter_param['role'] || submitter_param[:name] || submitter_param['name']
+      # Support both 'roles' (array of strings) and 'submitters' (array of hashes)
+      if params[:roles].present? || params[:submitters].present?
+        roles = params[:roles].presence || params[:submitters].map { |s| s[:name] || s['name'] || s[:role] || s['role'] }
+        template.submitters = Array.wrap(roles).map do |role_name|
           { 'name' => role_name, 'uuid' => SecureRandom.uuid }
         end
       end
