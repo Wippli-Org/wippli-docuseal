@@ -5,8 +5,10 @@
 
   if wippli_guest_url.present?
     # Use Wippli guest URL with DocuSeal slug appended
-    sign_url = "#{wippli_guest_url}?slug=#{@submitter.slug}&t=#{tracking_param}"
-    fallback_sign_url = "#{wippli_guest_url}?slug=#{@submitter.slug}&t=#{tracking_param}"
+    # Handle URLs that already have query params (use & instead of ?)
+    separator = wippli_guest_url.include?('?') ? '&' : '?'
+    sign_url = "#{wippli_guest_url}#{separator}slug=#{@submitter.slug}&t=#{tracking_param}"
+    fallback_sign_url = sign_url
   else
     # Fall back to default DocuSeal URL
     sign_url = submit_form_url(slug: @submitter.slug, t: tracking_param, host: ENV.fetch('EMAIL_HOST', Docuseal.default_url_options[:host]))
