@@ -1,5 +1,14 @@
 <template>
+  <!-- Wippli: Support custom logo URL from branding config -->
+  <img
+    v-if="logoUrl"
+    :src="logoUrl"
+    :alt="appName || 'Logo'"
+    height="40"
+    class="max-w-none"
+  >
   <svg
+    v-else
     height="40"
     width="40"
     version="1.1"
@@ -88,6 +97,19 @@
 
 <script>
 export default {
-  name: 'ProjectLogo'
+  name: 'ProjectLogo',
+  // Wippli: Accept branding configuration as props
+  props: {
+    logoUrl: {
+      type: String,
+      required: false,
+      default: ''
+    },
+    appName: {
+      type: String,
+      required: false,
+      default: ''
+    }
+  }
 }
 </script>

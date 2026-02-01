@@ -66,6 +66,14 @@ class TemplatesController < ApplicationController
       response.headers['Cache-Control'] = 'public, max-age=300, stale-while-revalidate=600'
     end
 
+    # Wippli: Load branding configuration for template editor
+    if user_signed_in?
+      account = current_account
+      @brand_logo_url = account.account_configs.find_by(key: AccountConfig::BRAND_LOGO_URL_KEY)&.value
+      @brand_app_name = account.account_configs.find_by(key: AccountConfig::BRAND_APP_NAME_KEY)&.value
+      @brand_primary_color = account.account_configs.find_by(key: AccountConfig::BRAND_PRIMARY_COLOR_KEY)&.value
+    end
+
     render :edit, layout: 'plain'
   end
 
