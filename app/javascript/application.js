@@ -175,7 +175,10 @@ safeRegisterElement('template-builder', class extends HTMLElement {
       withDownload: true,
       currencies: (this.dataset.currencies || '').split(',').filter(Boolean),
       acceptFileTypes: this.dataset.acceptFileTypes,
-      showTourStartForm: this.dataset.showTourStartForm === 'true'
+      showTourStartForm: this.dataset.showTourStartForm === 'true',
+      brandLogoUrl: this.dataset.brandLogoUrl,
+      brandAppName: this.dataset.brandAppName,
+      brandPrimaryColor: this.dataset.brandPrimaryColor
     })
 
     this.component = this.app.mount(this.appElem)
