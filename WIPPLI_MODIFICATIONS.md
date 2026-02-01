@@ -75,7 +75,7 @@ As required by AGPL-3.0 Section 13, we provide:
   # Added private methods:
   def load_template_for_edit
     if guest_authenticated?
-      @template = Template.find_by!(slug: params[:id])
+      @template = Template.find(params[:id])
     else
       @template = Template.accessible_by(current_ability).find(params[:id])
     end
@@ -89,8 +89,10 @@ As required by AGPL-3.0 Section 13, we provide:
 
 **Usage**:
 ```
-https://docuseal.wippli.ai/templates/{slug}/edit?guest_token={64_char_hex_token}
+https://docuseal.wippli.ai/templates/{id}/edit?guest_token={64_char_hex_token}
 ```
+
+Note: Use numeric template ID, not slug.
 
 **Guest Token Format**: 64-character hexadecimal string (validated by `GuestTokenAuthentication` concern)
 
