@@ -62,7 +62,10 @@
           v-if="withLogo"
           href="/"
         >
-          <Logo />
+          <Logo
+            :logo-url="brandLogoUrl"
+            :app-name="brandAppName"
+          />
         </a>
         <Contenteditable
           v-if="withTitle"
@@ -839,6 +842,21 @@ export default {
       type: Boolean,
       required: false,
       default: false
+    },
+    brandLogoUrl: {
+      type: String,
+      required: false,
+      default: ''
+    },
+    brandAppName: {
+      type: String,
+      required: false,
+      default: ''
+    },
+    brandPrimaryColor: {
+      type: String,
+      required: false,
+      default: ''
     }
   },
   data () {
