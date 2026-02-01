@@ -30,16 +30,15 @@ module Api
         schema.each { |item| item['pending_fields'] = true } if template.fields.present?
       end
 
-      template.update!(schema:)
-
-      # Wippli: Add submitters if provided in params
+      # Wippli: Set submitters if provided in params (replace default)
       if params[:submitters].present?
-        params[:submitters].each do |submitter_param|
+        template.submitters = params[:submitters].map do |submitter_param|
           role_name = submitter_param[:role] || submitter_param['role'] || submitter_param[:name] || submitter_param['name']
-          template.submitters << { 'name' => role_name, 'uuid' => SecureRandom.uuid }
+          { 'name' => role_name, 'uuid' => SecureRandom.uuid }
         end
-        template.save!
       end
+
+      template.update!(schema:)
 
       WebhookUrls.enqueue_events(template, 'template.created')
       SearchEntries.enqueue_reindex(template)
