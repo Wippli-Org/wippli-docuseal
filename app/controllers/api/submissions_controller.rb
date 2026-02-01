@@ -54,11 +54,13 @@ module Api
 
       return render json: { error: 'Template not found' }, status: :unprocessable_content if @template.nil?
 
-      if @template.fields.blank?
-        Rollbar.warning("Template does not contain fields: #{@template.id}") if defined?(Rollbar)
-
-        return render json: { error: 'Template does not contain fields' }, status: :unprocessable_content
-      end
+      # Wippli: Allow submissions without pre-defined fields for dynamic PDFs
+      # Users will place signature fields during signing
+      # if @template.fields.blank?
+      #   Rollbar.warning("Template does not contain fields: #{@template.id}") if defined?(Rollbar)
+      #
+      #   return render json: { error: 'Template does not contain fields' }, status: :unprocessable_content
+      # end
 
       params[:send_email] = true unless params.key?(:send_email)
       params[:send_sms] = false unless params.key?(:send_sms)

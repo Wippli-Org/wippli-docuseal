@@ -11,6 +11,15 @@ services:
     environment:
       - FORCE_SSL=${HOST}
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/docuseal
+      # Wippli: SendGrid SMTP configuration for email sending
+      - SMTP_ADDRESS=smtp.sendgrid.net
+      - SMTP_PORT=587
+      - SMTP_DOMAIN=${HOST}
+      - SMTP_USERNAME=apikey
+      - SMTP_PASSWORD=${SENDGRID_API_KEY}
+      - SMTP_AUTHENTICATION=plain
+      - SMTP_ENABLE_STARTTLS_AUTO=true
+      - EMAIL_HOST=${HOST}
 
   postgres:
     image: postgres:15
