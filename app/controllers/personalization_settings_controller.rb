@@ -8,7 +8,11 @@ class PersonalizationSettingsController < ApplicationController
     AccountConfig::SUBMITTER_DOCUMENTS_COPY_EMAIL_KEY,
     AccountConfig::SUBMITTER_COMPLETED_EMAIL_KEY,
     AccountConfig::FORM_COMPLETED_MESSAGE_KEY,
-    *(Docuseal.multitenant? ? [] : [AccountConfig::POLICY_LINKS_KEY])
+    *(Docuseal.multitenant? ? [] : [AccountConfig::POLICY_LINKS_KEY]),
+    # Wippli: Add branding customization keys
+    AccountConfig::BRAND_LOGO_URL_KEY,
+    AccountConfig::BRAND_APP_NAME_KEY,
+    AccountConfig::BRAND_PRIMARY_COLOR_KEY
   ].freeze
 
   InvalidKey = Class.new(StandardError)
