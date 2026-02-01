@@ -45,21 +45,28 @@ else
   warn '[WIPPLI] ✗ Rack::Response not found'
 end
 
-# Wait for ActionDispatch::Response to be loaded via Rails.application initializer
-Rails.application.config.after_initialize do
-  if defined?(ActionDispatch::Response)
-    ActionDispatch::Response.prepend(WippliHeaderPatch)
-    patched << 'ActionDispatch::Response'
-    puts '[WIPPLI] ✓ ActionDispatch::Response patched'
-  else
-    warn '[WIPPLI] ✗ ActionDispatch::Response not found'
-  end
+# Patch ActionDispatch::Response if available (after Rails initialization)
+if defined?(Rails) && Rails.respond_to?(:application) && Rails.application
+  Rails.application.config.after_initialize do
+    if defined?(ActionDispatch::Response)
+      ActionDispatch::Response.prepend(WippliHeaderPatch)
+      patched << 'ActionDispatch::Response'
+      puts '[WIPPLI] ✓ ActionDispatch::Response patched'
+    else
+      warn '[WIPPLI] ✗ ActionDispatch::Response not found'
+    end
 
+    if patched.any?
+      puts "[WIPPLI] SUCCESS: Patched #{patched.join(', ')} for iframe embedding"
+    else
+      warn '[WIPPLI] FAILURE: No response classes were patched!'
+    end
+  end
+  puts '[WIPPLI] Patch module loaded, Rails initializer registered...'
+else
+  # Rails not fully loaded yet, ActionDispatch::Response patch will be skipped
+  puts '[WIPPLI] Patch module loaded (Rails application not ready, using Rack::Response only)...'
   if patched.any?
-    puts "[WIPPLI] SUCCESS: Patched #{patched.join(', ')} for iframe embedding"
-  else
-    warn '[WIPPLI] FAILURE: No response classes were patched!'
+    puts "[WIPPLI] Patched #{patched.join(', ')} for iframe embedding"
   end
 end
-
-puts '[WIPPLI] Patch module loaded, waiting for Rails initialization...'
