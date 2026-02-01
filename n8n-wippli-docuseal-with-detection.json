@@ -1,0 +1,252 @@
+{
+  "name": "WippliSign with Field Detection",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wippli-docuseal-ai",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": ""
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://wippli-creator-toolkit.lemonriver-7e8b5f43.australiaeast.azurecontainerapps.io/api/branding",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "productId",
+              "value": "={{ $json.creator_product.id }}"
+            },
+            {
+              "name": "companyId",
+              "value": "={{ $json.supplier_companyId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "creator-node",
+      "name": "Get Guest Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://docuseal-test.whiteforest-41e4af0e.australiaeast.azurecontainerapps.io/templates_upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "={{ $credentials.docusealApiKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "files[]",
+              "value": "={{ $json.pdf_base64 }}"
+            },
+            {
+              "name": "name",
+              "value": "={{ $json.document_name || 'WippliSign Document' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "upload-template",
+      "name": "Upload PDF Template",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://docuseal-test.whiteforest-41e4af0e.australiaeast.azurecontainerapps.io/templates/{{ $json.id }}/detect_fields",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "={{ $credentials.docusealApiKey }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "detect-fields",
+      "name": "Detect Signature Fields",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://docuseal-test.whiteforest-41e4af0e.australiaeast.azurecontainerapps.io/api/submissions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "={{ $credentials.docusealApiKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "template_id",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "send_email",
+              "value": false
+            },
+            {
+              "name": "submitters",
+              "value": "={{ [{\"email\": $node[\"Webhook\"].json.user_email, \"name\": $node[\"Webhook\"].json.user_firstName + ' ' + $node[\"Webhook\"].json.user_lastName}] }}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{ {\"wippli_id\": $node[\"Webhook\"].json.wippli_id, \"product_id\": $node[\"Webhook\"].json.creator_product.id, \"company_id\": $node[\"Webhook\"].json.supplier_companyId, \"user_email\": $node[\"Webhook\"].json.user_email} }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "create-submission",
+      "name": "Create Submission",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookData = $node[\"Webhook\"].json;\nconst creatorData = $node[\"Get Guest Token\"].json;\nconst submissionData = $input.first().json;\n\nconst guestToken = webhookData.creator_product?.guestToken;\nconst submissionId = submissionData[0]?.id || submissionData.id;\nconst slug = submissionData[0]?.slug || submissionData.slug;\n\nif (!slug) throw new Error('No submission slug');\nif (!guestToken) throw new Error('No guest token');\n\nconst docusealUrl = `https://docuseal-test.whiteforest-41e4af0e.australiaeast.azurecontainerapps.io/s/${slug}?guest_token=${guestToken}`;\n\nreturn {\n  json: {\n    success: true,\n    docuseal: {\n      url: docusealUrl,\n      submission_id: submissionId,\n      slug: slug\n    },\n    guest_token: guestToken,\n    wippli: {\n      id: webhookData.wippli_id,\n      user_email: webhookData.user_email,\n      product_id: webhookData.creator_product.id,\n      company_id: webhookData.supplier_companyId\n    },\n    _timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1560, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Guest Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Guest Token": {
+      "main": [
+        [
+          {
+            "node": "Upload PDF Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload PDF Template": {
+      "main": [
+        [
+          {
+            "node": "Detect Signature Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Signature Fields": {
+      "main": [
+        [
+          {
+            "node": "Create Submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Submission": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0
+}

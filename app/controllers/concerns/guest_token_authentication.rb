@@ -138,8 +138,9 @@ module GuestTokenAuthentication
   end
 
   # Check if current session is authenticated with guest token
+  # Wippli: Memoize guest authentication check to avoid repeated session lookups
   def guest_authenticated?
-    session[:guest_authenticated] == true
+    @_guest_authenticated ||= (session[:guest_authenticated] == true)
   end
 
   # Get guest token data from session

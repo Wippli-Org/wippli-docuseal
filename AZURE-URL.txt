@@ -1,0 +1,26 @@
+Azure Container App URL for Cloudflare DNS Configuration
+========================================================
+
+Container App Name: docuseal-test
+Resource Group:     wippli-playground-rg
+Status:             Running ✅
+
+FULL URL (for testing):
+https://docuseal-test.whiteforest-41e4af0e.australiaeast.azurecontainerapps.io
+
+DNS TARGET (for Cloudflare CNAME - WITHOUT https://):
+docuseal-test.whiteforest-41e4af0e.australiaeast.azurecontainerapps.io
+
+========================================================
+CLOUDFLARE DNS CONFIGURATION
+========================================================
+
+Type:          CNAME
+Name:          docuseal
+Target:        docuseal-test.whiteforest-41e4af0e.australiaeast.azurecontainerapps.io
+Proxy status:  ☁️ Proxied (ORANGE cloud) ← CRITICAL!
+TTL:           Auto
+
+This will create: docuseal.wippli.ai
+
+========================================================

@@ -11,8 +11,8 @@ class ErrorsController < ActionController::Base
     '/api/templates/html',
     '/submissions/pdf',
     '/api/submissions/pdf',
-    '/templates/pdf',
-    '/api/templates/pdf',
+    # '/templates/pdf',        # Enabled for Wippli
+    # '/api/templates/pdf',    # Enabled for Wippli
     '/templates/doc',
     '/api/templates/doc',
     '/templates/docx',

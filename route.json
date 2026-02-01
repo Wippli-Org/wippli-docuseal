@@ -1,0 +1,4 @@
+{
+  "pattern": "docuseal.wippli.ai/*",
+  "script": "wippli-docuseal-iframe-fix"
+}

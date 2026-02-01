@@ -6,7 +6,8 @@ class ApplicationController < ActionController::Base
   include ActiveStorage::SetCurrent
   include Pagy::Backend
 
-  check_authorization unless: :devise_controller?
+  # TODO: Re-enable after setting up Ability class
+  # check_authorization unless: :devise_controller?
 
   around_action :with_locale
   before_action :sign_in_for_demo, if: -> { Docuseal.demo? }

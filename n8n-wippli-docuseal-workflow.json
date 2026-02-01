@@ -1,0 +1,178 @@
+{
+  "name": "WippliSign with Guest Token",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wippli-docuseal",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://wippli-creator-toolkit.lemonriver-7e8b5f43.australiaeast.azurecontainerapps.io/api/branding",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "productId",
+              "value": "={{ $json.body.nodesObject.wippli.productId }}"
+            },
+            {
+              "name": "companyId",
+              "value": "={{ $json.body.nodesObject.wippli.companyId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "creator-node",
+      "name": "Creator Node",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://docuseal.wippli.ai/api/submissions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "={{ $credentials.docusealApiKey }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "template_id",
+              "value": "={{ $json.body.templateId || 1 }}"
+            },
+            {
+              "name": "send_email",
+              "value": false
+            },
+            {
+              "name": "recipients",
+              "value": "={{ [{\"email\": $json.body.nodesObject.user.email, \"name\": $json.body.nodesObject.user.firstName + ' ' + $json.body.nodesObject.user.lastName, \"role\": \"signer\"}] }}"
+            },
+            {
+              "name": "metadata",
+              "value": "={{ {\"wippli_id\": $json.body.wippliId, \"product_id\": $json.body.nodesObject.wippli.productId, \"company_id\": $json.body.nodesObject.wippli.companyId, \"user_email\": $json.body.nodesObject.user.email} }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "create-docuseal",
+      "name": "Create DocuSeal Submission",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract data from previous nodes\nconst webhookData = $node[\"Webhook\"].json.body;\nconst creatorData = $node[\"Creator Node\"].json;\nconst docusealData = $input.first().json;\n\n// Get guest token from Creator Node\nconst guestToken = creatorData.creator_product?.guestToken || \n                   creatorData.guestToken ||\n                   creatorData.product?.guestToken;\n\n// Get DocuSeal submission details\nconst submissionId = docusealData.id || docusealData[0]?.id;\nconst slug = docusealData.slug || docusealData[0]?.slug;\n\n// Validate we have required data\nif (!slug) {\n  throw new Error('No submission slug returned from DocuSeal');\n}\n\nif (!guestToken) {\n  throw new Error('No guest token from Creator Node');\n}\n\n// Form the guest token URL\nconst docusealUrl = `https://docuseal.wippli.ai/s/${slug}?guest_token=${guestToken}`;\n\n// Extract Wippli data\nconst wippliId = webhookData.wippliId;\nconst userId = webhookData.nodesObject?.user?.id;\nconst userEmail = webhookData.nodesObject?.user?.email;\nconst userName = webhookData.nodesObject?.user?.firstName + ' ' + webhookData.nodesObject?.user?.lastName;\n\n// Return formatted response\nreturn {\n  json: {\n    success: true,\n    docuseal: {\n      url: docusealUrl,\n      url_without_token: `https://docuseal.wippli.ai/s/${slug}`,\n      submission_id: submissionId,\n      slug: slug\n    },\n    guest_token: guestToken,\n    wippli: {\n      id: wippliId,\n      user_id: userId,\n      user_email: userEmail,\n      user_name: userName,\n      product_id: webhookData.nodesObject?.wippli?.productId,\n      company_id: webhookData.nodesObject?.wippli?.companyId\n    },\n    branding: {\n      product_name: creatorData.creator_product?.name,\n      company_name: creatorData.creator_company?.name,\n      company_code: creatorData.creator_company?.code\n    },\n    _timestamp: new Date().toISOString(),\n    _note: 'URL with guest_token allows access without login'\n  }\n};"
+      },
+      "id": "format-response",
+      "name": "Format Response with Guest Token",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Creator Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creator Node": {
+      "main": [
+        [
+          {
+            "node": "Create DocuSeal Submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create DocuSeal Submission": {
+      "main": [
+        [
+          {
+            "node": "Format Response with Guest Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response with Guest Token": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2026-01-30T11:00:00.000Z",
+  "versionId": "1"
+}
