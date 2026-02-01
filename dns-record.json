@@ -1,0 +1,7 @@
+{
+  "type": "CNAME",
+  "name": "docuseal",
+  "content": "docuseal-test.whiteforest-41e4af0e.australiaeast.azurecontainerapps.io",
+  "proxied": true,
+  "ttl": 1
+}
