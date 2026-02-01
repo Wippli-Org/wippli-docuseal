@@ -40,6 +40,8 @@ Rails.application.routes.draw do
       resources :clone, only: %i[create], controller: 'templates_clone'
       resources :submissions, only: %i[index create]
     end
+    # Wippli: Enable template creation from PDF via API
+    resource :templates_pdf, only: %i[create], path: 'templates/pdf', controller: 'templates_pdf'
     resources :tools, only: %i[] do
       post :merge, on: :collection
       post :verify, on: :collection
