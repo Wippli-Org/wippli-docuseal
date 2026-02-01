@@ -32,6 +32,15 @@ module Api
 
       template.update!(schema:)
 
+      # Wippli: Add submitters if provided in params
+      if params[:submitters].present?
+        params[:submitters].each do |submitter_param|
+          role_name = submitter_param[:role] || submitter_param['role'] || submitter_param[:name] || submitter_param['name']
+          template.submitters << { 'name' => role_name, 'uuid' => SecureRandom.uuid }
+        end
+        template.save!
+      end
+
       WebhookUrls.enqueue_events(template, 'template.created')
       SearchEntries.enqueue_reindex(template)
 
