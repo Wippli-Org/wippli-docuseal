@@ -51,10 +51,54 @@ As required by AGPL-3.0 Section 13, we provide:
   resource :templates_pdf, only: %i[create], path: 'templates/pdf', controller: 'templates_pdf'
   ```
 
-### 2. Guest Token Authentication (Previous Modifications)
+### 2. Template Editor Guest Access (2026-02-01)
+
+**Purpose**: Enable iframe embedding of template editor without authentication for Wippli integration.
+
+**Files Modified**:
+
+#### `app/controllers/templates_controller.rb`
+- **Lines 4-10**: Added guest token authentication and conditional authorization
+- **Lines 118-134**: Added methods for guest template loading and access control
+- **Reason**: Allow Wippli to embed DocuSeal template editor in iframe using guest tokens
+- **Changes**:
+  ```ruby
+  # Added at top of controller:
+  include GuestTokenAuthentication  # Wippli: Enable guest token authentication for iframe embedding
+
+  load_and_authorize_resource :template, except: [:edit]  # Wippli: Skip CanCan for edit to allow guest access
+  skip_before_action :authenticate_user!, only: [:edit], if: -> { params[:guest_token].present? || params[:guestToken].present? }
+
+  before_action :load_template_for_edit, only: [:edit]
+  before_action :ensure_edit_access, only: [:edit]
+
+  # Added private methods:
+  def load_template_for_edit
+    if guest_authenticated?
+      @template = Template.find_by!(slug: params[:id])
+    else
+      @template = Template.accessible_by(current_ability).find(params[:id])
+    end
+  end
+
+  def ensure_edit_access
+    return if user_signed_in? || guest_authenticated?
+    redirect_to new_user_session_path, alert: 'Please sign in to continue.'
+  end
+  ```
+
+**Usage**:
+```
+https://docuseal.wippli.ai/templates/{slug}/edit?guest_token={64_char_hex_token}
+```
+
+**Guest Token Format**: 64-character hexadecimal string (validated by `GuestTokenAuthentication` concern)
+
+### 3. Guest Token Authentication (Previous Modifications)
 
 **Files Modified**:
 - `app/controllers/submit_form_controller.rb`: Added guest token validation
+- `app/controllers/concerns/guest_token_authentication.rb`: Existing concern for guest authentication
 - `config.ru`: Added CORS and iframe embedding headers
 
 See commit history for details: https://github.com/Wippli-Org/wippli-docuseal/commits/master

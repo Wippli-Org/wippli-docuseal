@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
 class TemplatesController < ApplicationController
-  load_and_authorize_resource :template
+  include GuestTokenAuthentication  # Wippli: Enable guest token authentication for iframe embedding
 
+  load_and_authorize_resource :template, except: [:edit]  # Wippli: Skip CanCan for edit to allow guest access
+  skip_before_action :authenticate_user!, only: [:edit], if: -> { params[:guest_token].present? || params[:guestToken].present? }  # Wippli: Skip login when guest token provided
+
+  before_action :load_template_for_edit, only: [:edit]  # Wippli: Manually load template for edit
+  before_action :ensure_edit_access, only: [:edit]  # Wippli: Ensure either authenticated user or valid guest token
   before_action :load_base_template, only: %i[new create]
 
   def show
@@ -114,6 +119,24 @@ class TemplatesController < ApplicationController
   end
 
   private
+
+  # Wippli: Manually load template for edit action to support both authenticated and guest access
+  def load_template_for_edit
+    if guest_authenticated?
+      # Load template by slug for guests (no authorization check)
+      @template = Template.find_by!(slug: params[:id])
+    else
+      # Load and authorize for authenticated users
+      @template = Template.accessible_by(current_ability).find(params[:id])
+    end
+  end
+
+  # Wippli: Ensure user has access to edit - either authenticated or valid guest token
+  def ensure_edit_access
+    return if user_signed_in? || guest_authenticated?
+
+    redirect_to new_user_session_path, alert: 'Please sign in to continue.'
+  end
 
   def template_params
     params.require(:template).permit(
