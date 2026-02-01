@@ -54,6 +54,10 @@ class AccountConfig < ApplicationRecord
   COMBINE_PDF_RESULT_KEY = 'combine_pdf_result_key'
   DOCUMENT_FILENAME_FORMAT_KEY = 'document_filename_format'
   POLICY_LINKS_KEY = 'policy_links'
+  # Wippli: Branding customization keys
+  BRAND_LOGO_URL_KEY = 'brand_logo_url'
+  BRAND_APP_NAME_KEY = 'brand_app_name'
+  BRAND_PRIMARY_COLOR_KEY = 'brand_primary_color'
 
   DEFAULT_VALUES = {
     SUBMITTER_INVITATION_EMAIL_KEY => lambda {
