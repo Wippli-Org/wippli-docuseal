@@ -9,7 +9,7 @@
     <%# Logo URL Form %>
     <%= form_for(
       current_account.account_configs.find_or_initialize_by(key: AccountConfig::BRAND_LOGO_URL_KEY),
-      url: settings_personalization_index_path,
+      url: settings_personalization_path,
       html: { autocomplete: 'off', class: 'space-y-4' }
     ) do |f| %>
       <%= f.hidden_field :key, value: AccountConfig::BRAND_LOGO_URL_KEY %>
@@ -35,7 +35,7 @@
     <%# App Name Form %>
     <%= form_for(
       current_account.account_configs.find_or_initialize_by(key: AccountConfig::BRAND_APP_NAME_KEY),
-      url: settings_personalization_index_path,
+      url: settings_personalization_path,
       html: { autocomplete: 'off', class: 'space-y-4 mt-6' }
     ) do |f| %>
       <%= f.hidden_field :key, value: AccountConfig::BRAND_APP_NAME_KEY %>
@@ -61,7 +61,7 @@
     <%# Primary Color Form %>
     <%= form_for(
       current_account.account_configs.find_or_initialize_by(key: AccountConfig::BRAND_PRIMARY_COLOR_KEY),
-      url: settings_personalization_index_path,
+      url: settings_personalization_path,
       html: { autocomplete: 'off', class: 'space-y-4 mt-6' }
     ) do |f| %>
       <%= f.hidden_field :key, value: AccountConfig::BRAND_PRIMARY_COLOR_KEY %>
