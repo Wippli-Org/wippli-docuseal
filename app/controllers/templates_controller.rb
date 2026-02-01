@@ -66,12 +66,16 @@ class TemplatesController < ApplicationController
       response.headers['Cache-Control'] = 'public, max-age=300, stale-while-revalidate=600'
     end
 
-    # Wippli: Load branding configuration for template editor
+    # Wippli: Load branding configuration for template editor with defaults
     if user_signed_in?
       account = current_account
-      @brand_logo_url = account.account_configs.find_by(key: AccountConfig::BRAND_LOGO_URL_KEY)&.value
-      @brand_app_name = account.account_configs.find_by(key: AccountConfig::BRAND_APP_NAME_KEY)&.value
+      @brand_logo_url = account.account_configs.find_by(key: AccountConfig::BRAND_LOGO_URL_KEY)&.value || 'https://raw.githubusercontent.com/Wippli-Org/wippli-docuseal/wippli-combined/WIPPLI_SIGN.svg'
+      @brand_app_name = account.account_configs.find_by(key: AccountConfig::BRAND_APP_NAME_KEY)&.value || 'WippliSign'
       @brand_primary_color = account.account_configs.find_by(key: AccountConfig::BRAND_PRIMARY_COLOR_KEY)&.value
+    else
+      # Wippli: Use defaults for guest users too
+      @brand_logo_url = 'https://raw.githubusercontent.com/Wippli-Org/wippli-docuseal/wippli-combined/WIPPLI_SIGN.svg'
+      @brand_app_name = 'WippliSign'
     end
 
     render :edit, layout: 'plain'
