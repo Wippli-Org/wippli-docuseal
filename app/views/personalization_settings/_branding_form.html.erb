@@ -1,0 +1,93 @@
+<%# Wippli: Branding customization form %>
+<div class="card bg-base-200">
+  <div class="card-body">
+    <h3 class="text-2xl font-bold mb-4">Branding Customization</h3>
+    <p class="text-sm opacity-60 mb-4">
+      Customize your brand's appearance in the template editor.
+    </p>
+
+    <%# Logo URL Form %>
+    <%= form_for(
+      current_account.account_configs.find_or_initialize_by(key: AccountConfig::BRAND_LOGO_URL_KEY),
+      url: settings_personalization_index_path,
+      html: { autocomplete: 'off', class: 'space-y-4' }
+    ) do |f| %>
+      <%= f.hidden_field :key, value: AccountConfig::BRAND_LOGO_URL_KEY %>
+
+      <div class="form-control">
+        <%= f.label :value, 'Logo URL', class: 'label' %>
+        <%= f.text_field :value,
+          class: 'base-input',
+          placeholder: 'https://example.com/logo.svg',
+          dir: 'auto' %>
+        <label class="label">
+          <span class="label-text-alt opacity-60">
+            Enter the URL to your logo image (SVG, PNG, or JPG). Leave empty to use default logo.
+          </span>
+        </label>
+      </div>
+
+      <%= f.button button_title(title: 'Update', disabled_with: 'Updating'),
+        class: 'base-button',
+        data: { turbo_submits_with: button_title(title: 'Update', disabled_with: 'Updating') } %>
+    <% end %>
+
+    <%# App Name Form %>
+    <%= form_for(
+      current_account.account_configs.find_or_initialize_by(key: AccountConfig::BRAND_APP_NAME_KEY),
+      url: settings_personalization_index_path,
+      html: { autocomplete: 'off', class: 'space-y-4 mt-6' }
+    ) do |f| %>
+      <%= f.hidden_field :key, value: AccountConfig::BRAND_APP_NAME_KEY %>
+
+      <div class="form-control">
+        <%= f.label :value, 'Application Name', class: 'label' %>
+        <%= f.text_field :value,
+          class: 'base-input',
+          placeholder: 'Your Company Name',
+          dir: 'auto' %>
+        <label class="label">
+          <span class="label-text-alt opacity-60">
+            Customize the application name shown in the interface. Leave empty to use "DocuSeal".
+          </span>
+        </label>
+      </div>
+
+      <%= f.button button_title(title: 'Update', disabled_with: 'Updating'),
+        class: 'base-button',
+        data: { turbo_submits_with: button_title(title: 'Update', disabled_with: 'Updating') } %>
+    <% end %>
+
+    <%# Primary Color Form %>
+    <%= form_for(
+      current_account.account_configs.find_or_initialize_by(key: AccountConfig::BRAND_PRIMARY_COLOR_KEY),
+      url: settings_personalization_index_path,
+      html: { autocomplete: 'off', class: 'space-y-4 mt-6' }
+    ) do |f| %>
+      <%= f.hidden_field :key, value: AccountConfig::BRAND_PRIMARY_COLOR_KEY %>
+
+      <div class="form-control">
+        <%= f.label :value, 'Primary Color', class: 'label' %>
+        <div class="flex gap-2">
+          <%= f.color_field :value,
+            class: 'w-16 h-10 rounded cursor-pointer',
+            value: current_account.account_configs.find_by(key: AccountConfig::BRAND_PRIMARY_COLOR_KEY)&.value || '#4F46E5' %>
+          <%= f.text_field :value,
+            class: 'base-input flex-grow',
+            placeholder: '#4F46E5',
+            pattern: '^#[0-9A-Fa-f]{6}$',
+            dir: 'auto' %>
+        </div>
+        <label class="label">
+          <span class="label-text-alt opacity-60">
+            Choose your brand's primary color (hex format). This will be used for buttons and accents.
+          </span>
+        </label>
+      </div>
+
+      <%= f.button button_title(title: 'Update', disabled_with: 'Updating'),
+        class: 'base-button',
+        data: { turbo_submits_with: button_title(title: 'Update', disabled_with: 'Updating') } %>
+    <% end %>
+  </div>
+</div>
