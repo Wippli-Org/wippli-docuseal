@@ -6,7 +6,7 @@
 
 puts '[WIPPLI] Loading iframe embedding patch...'
 
-module WippliHeaderPatch
+module WippliPatch
   def finish(...)
     status, headers, body = super
 
@@ -38,7 +38,7 @@ end
 patched = []
 
 if defined?(Rack::Response)
-  Rack::Response.prepend(WippliHeaderPatch)
+  Rack::Response.prepend(WippliPatch)
   patched << 'Rack::Response'
   puts '[WIPPLI] ✓ Rack::Response patched'
 else
@@ -49,7 +49,7 @@ end
 if defined?(Rails) && Rails.respond_to?(:application) && Rails.application
   Rails.application.config.after_initialize do
     if defined?(ActionDispatch::Response)
-      ActionDispatch::Response.prepend(WippliHeaderPatch)
+      ActionDispatch::Response.prepend(WippliPatch)
       patched << 'ActionDispatch::Response'
       puts '[WIPPLI] ✓ ActionDispatch::Response patched'
     else
