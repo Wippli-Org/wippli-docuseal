@@ -38,7 +38,7 @@ Puma::Plugin.create do
 
       configs = Sidekiq.configure_embed do |config|
         config.logger.level = Logger::INFO
-        sidekiq_config = YAML.load_file('config/sidekiq.yml')
+        sidekiq_config = YAML.load_file(File.join(Rails.root, 'config/sidekiq.yml'))
         sidekiq_config['queues'] << 'fields' if ENV['DEMO'] == 'true'
         config.queues = sidekiq_config['queues']
         config.concurrency = ENV.fetch('SIDEKIQ_THREADS', 5).to_i
