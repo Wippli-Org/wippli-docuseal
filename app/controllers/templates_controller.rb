@@ -123,8 +123,8 @@ class TemplatesController < ApplicationController
   # Wippli: Manually load template for edit action to support both authenticated and guest access
   def load_template_for_edit
     if guest_authenticated?
-      # Load template by slug for guests (no authorization check)
-      @template = Template.find_by!(slug: params[:id])
+      # Load template by ID for guests (no authorization check)
+      @template = Template.find(params[:id])
     else
       # Load and authorize for authenticated users
       @template = Template.accessible_by(current_ability).find(params[:id])
