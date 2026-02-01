@@ -26,7 +26,10 @@ class TemplatesController < ApplicationController
                     submissions.order(id: :desc)
                   end
 
-    @pagy, @submissions = pagy_auto(submissions.preload(:template_accesses, submitters: :start_form_submission_events))
+    # Wippli: Optimize preloading to avoid N+1 queries
+    @pagy, @submissions = pagy_auto(
+      submissions.preload(:template_accesses, :account, submitters: [:start_form_submission_events, :account])
+    )
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path
   end
@@ -41,13 +44,27 @@ class TemplatesController < ApplicationController
       associations: [schema_documents: [:blob, { preview_images_attachments: :blob }]]
     ).call
 
-    @template_data =
-      @template.as_json.merge(
-        documents: @template.schema_documents.as_json(
-          methods: %i[metadata signed_uuid],
-          include: { preview_images: { methods: %i[url metadata filename] } }
-        )
-      ).to_json
+    # Wippli: Optimize template data serialization - only include essential fields
+    @template_data = {
+      id: @template.id,
+      name: @template.name,
+      slug: @template.slug,
+      schema: @template.schema,
+      fields: @template.fields,
+      submitters: @template.submitters,
+      preferences: @template.preferences,
+      archived_at: @template.archived_at,
+      documents: @template.schema_documents.as_json(
+        only: %i[id uuid],
+        methods: %i[signed_uuid],
+        include: { preview_images: { methods: %i[url metadata filename] } }
+      )
+    }.to_json
+
+    # Wippli: Enable browser caching for guest-accessed template editor
+    if guest_authenticated?
+      response.headers['Cache-Control'] = 'public, max-age=300, stale-while-revalidate=600'
+    end
 
     render :edit, layout: 'plain'
   end

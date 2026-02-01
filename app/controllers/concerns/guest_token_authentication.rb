@@ -29,7 +29,8 @@ module GuestTokenAuthentication
     token.is_a?(String) && token.length == 64 && token.match?(/\A[0-9a-f]{64}\z/i)
   end
 
+  # Wippli: Memoize guest authentication check to avoid repeated session lookups
   def guest_authenticated?
-    session[:guest_authenticated] == true
+    @_guest_authenticated ||= (session[:guest_authenticated] == true)
   end
 end
