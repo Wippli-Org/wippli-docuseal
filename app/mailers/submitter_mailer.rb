@@ -243,6 +243,13 @@ class SubmitterMailer < ApplicationMailer
   end
 
   def from_address_for_submitter(submitter)
+    # Wippli: Use SMTP_FROM env var if set (must match verified SendGrid domain)
+    if ENV['SMTP_FROM'].present?
+      user = submitter.submission.created_by_user || submitter.submission.template.author
+      put_metadata('from_user_id' => user.id)
+      return ENV['SMTP_FROM']
+    end
+
     if submitter.submission.source.in?(%w[api embed]) &&
        (from_email = AccountConfig.find_by(account: submitter.account, key: 'integration_from_email')&.value.presence)
       user = submitter.account.users.find_by(email: from_email)
