@@ -37,7 +37,7 @@ module Submissions
       bold_italic: FONT_BOLD_NAME
     }.freeze
 
-    SIGN_REASON = 'Signed by %<name>s with DocuSeal.com'
+    SIGN_REASON = 'Signed by %<name>s with Wippli Sign'
 
     RTL_REGEXP = TextUtils::RTL_REGEXP
 
@@ -708,6 +708,29 @@ module Submissions
       io = StringIO.new
 
       pdf.trailer.info[:Creator] = info_creator
+
+      # Wippli: Add attribution to last page
+      last_page = pdf.pages.to_a.last
+      if last_page
+        attr_font = pdf.fonts.add(FONT_NAME)
+        attr_font_size = (([last_page.box.width, last_page.box.height].min / A4_SIZE[0].to_f) * 7).to_i
+        attr_font_size = [attr_font_size, 5].max
+        cnv = last_page.canvas(type: :overlay)
+
+        attribution = "Digitally signed via Wippli\u00AE Sign | Powered by DocuSeal under AGPL-3.0 licence."
+        attr_text = HexaPDF::Layout::TextFragment.create(
+          attribution, font: attr_font, font_size: attr_font_size, fill_color: '888888',
+          underlays: [
+            lambda do |canv, box|
+              canv.fill_color('white').rectangle(-1, 0, box.width + 2, box.height).fill
+            end
+          ]
+        )
+
+        HexaPDF::Layout::TextLayouter.new(font: attr_font, font_size: attr_font_size, text_align: :center)
+                                     .fit([attr_text], last_page.box.width - 4, 100)
+                                     .draw(cnv, 2, attr_font_size * 2.8)
+      end
 
       if Docuseal.pdf_format == 'pdf/a-3b'
         pdf.task(:pdfa, level: '3b')
