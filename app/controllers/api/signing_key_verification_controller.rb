@@ -6,6 +6,8 @@ module Api
     skip_authorization_check
 
     def create
+      RateLimit.call("verify-signing-key-#{request.remote_ip}", limit: 10, ttl: 1.minute, enabled: true)
+
       submitter = Submitter.joins(:submission)
                            .where("submitters.metadata->>'signing_key' = ?", params[:key].to_s.strip)
                            .first
