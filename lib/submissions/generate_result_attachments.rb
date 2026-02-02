@@ -709,15 +709,20 @@ module Submissions
 
       pdf.trailer.info[:Creator] = info_creator
 
-      # Wippli: Add attribution to last page
-      last_page = pdf.pages.to_a.last
-      if last_page
-        attr_font = pdf.fonts.add(FONT_NAME)
-        attr_font_size = (([last_page.box.width, last_page.box.height].min / A4_SIZE[0].to_f) * 7).to_i
-        attr_font_size = [attr_font_size, 5].max
-        cnv = last_page.canvas(type: :overlay)
+      # Wippli: Add attribution + Original SHA256 footer to every page
+      original_doc = submitter.submission.schema_documents.find { |d| d.uuid == uuid }
+      original_sha256 = original_doc&.metadata&.dig('sha256') || original_doc&.checksum
 
-        attribution = "Digitally signed via Wippli\u00AE Sign | Powered by DocuSeal under AGPL-3.0 licence."
+      attribution = "Digitally signed via Wippli\u00AE Sign"
+      attribution += " | Original SHA256: #{original_sha256}" if original_sha256
+      attribution += " | Powered by DocuSeal under AGPL-3.0 licence."
+
+      pdf.pages.each do |page|
+        attr_font = pdf.fonts.add(FONT_NAME)
+        attr_font_size = (([page.box.width, page.box.height].min / A4_SIZE[0].to_f) * 7).to_i
+        attr_font_size = [attr_font_size, 5].max
+        cnv = page.canvas(type: :overlay)
+
         attr_text = HexaPDF::Layout::TextFragment.create(
           attribution, font: attr_font, font_size: attr_font_size, fill_color: '888888',
           underlays: [
@@ -728,7 +733,7 @@ module Submissions
         )
 
         HexaPDF::Layout::TextLayouter.new(font: attr_font, font_size: attr_font_size, text_align: :center)
-                                     .fit([attr_text], last_page.box.width - 4, 100)
+                                     .fit([attr_text], page.box.width - 4, 100)
                                      .draw(cnv, 2, attr_font_size * 2.8)
       end
 
