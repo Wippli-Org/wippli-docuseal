@@ -12,6 +12,7 @@ module Api
 
     wrap_parameters false
 
+    before_action :set_cors_headers
     before_action :authenticate_user!
     check_authorization
 

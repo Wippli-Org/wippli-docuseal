@@ -1,13 +1,15 @@
 <%
   # Wippli: Construct signing URL using Wippli guest URL if available
   wippli_guest_url = @submitter.metadata['wippli_guest_url']
+  signing_key = @submitter.metadata['signing_key']
   tracking_param = SubmissionEvents.build_tracking_param(@submitter, 'click_email')
 
   if wippli_guest_url.present?
-    # Use Wippli guest URL with DocuSeal slug appended
-    # Handle URLs that already have query params (use & instead of ?)
+    # Build full DocuSeal signing URL and pass as embed parameter
+    docuseal_host = ENV.fetch('EMAIL_HOST', Docuseal.default_url_options[:host])
+    docuseal_sign_url = submit_form_url(slug: @submitter.slug, t: tracking_param, host: docuseal_host)
     separator = wippli_guest_url.include?('?') ? '&' : '?'
-    sign_url = "#{wippli_guest_url}#{separator}slug=#{@submitter.slug}&t=#{tracking_param}"
+    sign_url = "#{wippli_guest_url}#{separator}embed=#{CGI.escape(docuseal_sign_url)}"
     fallback_sign_url = sign_url
   else
     # Fall back to default DocuSeal URL
@@ -24,6 +26,10 @@
   <p><%= t('hi_there') %>,</p>
   <p><%= I18n.t(@submitter.with_signature_fields? ? :you_have_been_invited_to_sign_the_name : :you_have_been_invited_to_submit_the_name_form, name: @submitter.submission.name || @submitter.submission.template.name) %></p>
   <p><%= link_to I18n.t(@submitter.with_signature_fields? ? :review_and_sign : :review_and_submit), sign_url %></p>
+  <% if signing_key.present? %>
+    <p style="margin: 16px 0;">Your signing key: <strong style="font-size: 20px; letter-spacing: 4px; background: #f3f4f6; padding: 8px 16px; border-radius: 6px; font-family: monospace;"><%= signing_key %></strong></p>
+    <p style="font-size: 13px; color: #666;">You can also enter this key at the signing page to access your document.</p>
+  <% end %>
   <p><%= t('please_contact_us_by_replying_to_this_email_if_you_have_any_questions') %></p>
   <p>
   <%= t('thanks') %>,<br><%= @current_account.name %>

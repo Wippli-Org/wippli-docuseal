@@ -326,7 +326,7 @@ module Submissions
           external_id: attrs[:external_id].presence || attrs[:application_key],
           completed_at: attrs[:completed].present? ? Time.current : nil,
           values: values.except(phone_field_uuid),
-          metadata: attrs[:metadata] || {},
+          metadata: (attrs[:metadata] || {}).merge('signing_key' => generate_signing_key),
           preferences: preferences.merge(submitter_preferences)
                                   .merge({ default_values: attrs[:values] }.compact_blank)
                                   .except('bcc_completed'),
@@ -339,6 +339,14 @@ module Submissions
       assign_completed_attributes(submitter) if submitter.completed_at?
 
       submitter
+    end
+
+    # Wippli: Generate a unique 6-digit signing key for email-based access
+    def generate_signing_key
+      loop do
+        key = SecureRandom.random_number(999_999).to_s.rjust(6, '0')
+        break key unless Submitter.where("CAST(metadata AS jsonb)->>'signing_key' = ?", key).exists?
+      end
     end
 
     def find_phone_field(submission, values)

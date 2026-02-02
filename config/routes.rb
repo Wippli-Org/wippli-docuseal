@@ -129,6 +129,10 @@ Rails.application.routes.draw do
     ActiveSupport.run_load_hooks(:multitenant_routes, self)
   end
 
+  # Wippli: Signing key resolver - 6-digit key to signing form
+  get '/sign', to: 'signing_keys#new', as: :new_signing_key
+  get '/sign/:key', to: 'signing_keys#show', as: :signing_key
+
   resources :start_form, only: %i[show update], path: 'd', param: 'slug' do
     get :completed
   end

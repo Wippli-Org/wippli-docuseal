@@ -3,11 +3,13 @@
 class TemplatesController < ApplicationController
   include GuestTokenAuthentication  # Wippli: Enable guest token authentication for iframe embedding
 
-  load_and_authorize_resource :template, except: [:edit]  # Wippli: Skip CanCan for edit to allow guest access
-  skip_before_action :authenticate_user!, only: [:edit], if: -> { params[:guest_token].present? || params[:guestToken].present? }  # Wippli: Skip login when guest token provided
+  load_and_authorize_resource :template, except: %i[edit update]  # Wippli: Skip CanCan for edit+update to allow guest access
+  skip_before_action :authenticate_user!, only: %i[edit update], if: -> { params[:guest_token].present? || params[:guestToken].present? || session[:guest_authenticated] == true }
 
-  before_action :load_template_for_edit, only: [:edit]  # Wippli: Manually load template for edit
-  before_action :ensure_edit_access, only: [:edit]  # Wippli: Ensure either authenticated user or valid guest token
+  before_action :load_template_for_edit, only: [:edit]
+  before_action :ensure_edit_access, only: [:edit]
+  before_action :load_template_for_guest_update, only: [:update]
+  before_action :ensure_update_access, only: [:update]
   before_action :load_base_template, only: %i[new create]
 
   def show
@@ -77,6 +79,8 @@ class TemplatesController < ApplicationController
       @brand_logo_url = 'https://raw.githubusercontent.com/Wippli-Org/wippli-docuseal/wippli-combined/WIPPLI_SIGN.svg'
       @brand_app_name = 'WippliSign'
     end
+
+    @is_guest_mode = guest_authenticated? && !user_signed_in?
 
     render :edit, layout: 'plain'
   end
@@ -165,6 +169,23 @@ class TemplatesController < ApplicationController
     return if user_signed_in? || guest_authenticated?
 
     redirect_to new_user_session_path, alert: 'Please sign in to continue.'
+  end
+
+  # Wippli: Load template for guest update (CanCan is skipped)
+  def load_template_for_guest_update
+    return if @template
+
+    if guest_authenticated?
+      @template = Template.find(params[:id])
+    elsif user_signed_in?
+      @template = Template.accessible_by(current_ability).find(params[:id])
+    end
+  end
+
+  def ensure_update_access
+    return if user_signed_in? || guest_authenticated?
+
+    head :unauthorized
   end
 
   def template_params

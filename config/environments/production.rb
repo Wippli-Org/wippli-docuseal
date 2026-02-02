@@ -30,6 +30,10 @@ Rails.application.configure do
   config.action_dispatch.default_headers.delete('X-Frame-Options')
   config.action_dispatch.default_headers['Content-Security-Policy'] = "frame-ancestors 'self' *.wippli.ai app.wippli.ai dev.wippli.ai localhost:*"
 
+  # Wippli: Disable CSRF origin check - Cloudflare proxy (docuseal.wippli.ai) causes Origin
+  # header mismatch with Azure Container App base URL. CSRF token validation still active.
+  config.action_controller.forgery_protection_origin_check = false
+
   config.active_job.queue_adapter = :sidekiq
 
   # Ensures that a master key has been made available in either ENV["RAILS_MASTER_KEY"]
