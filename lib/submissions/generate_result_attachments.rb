@@ -705,6 +705,8 @@ module Submissions
     end
 
     def build_pdf_attachment(pdf:, submitter:, pkcs:, tsa_url:, uuid:, name:)
+      add_wippli_attribution_footer(pdf, submitter, uuid)
+
       io = StringIO.new
 
       pdf.trailer.info[:Creator] = info_creator
@@ -763,6 +765,37 @@ module Submissions
       )
     end
     # rubocop:enable Metrics
+
+    def add_wippli_attribution_footer(pdf, submitter, original_uuid)
+      last_page = pdf.pages.last
+      return unless last_page
+
+      original_doc = submitter.submission.schema_documents.find { |d| d.uuid == original_uuid }
+      original_sha256 = original_doc&.metadata&.dig('sha256') || original_doc&.checksum
+
+      footer_text = +"Digitally signed via Wippli\u00AE Sign"
+      footer_text << " | Original SHA256: #{original_sha256}" if original_sha256
+      footer_text << " | Powered by DocuSeal under AGPL-3.0 licence."
+
+      font = pdf.fonts.add(FONT_NAME)
+      font_size = 7
+
+      cnv = last_page.canvas(type: :overlay)
+
+      text = HexaPDF::Layout::TextFragment.create(
+        footer_text, font:, font_size:, fill_color: '888888',
+        underlays: [
+          lambda do |canv, box|
+            canv.fill_color('white').rectangle(-1, 0, box.width + 2, box.height).fill
+          end
+        ]
+      )
+
+      y_position = font_size * 2.8
+      HexaPDF::Layout::TextLayouter.new(font:, font_size:)
+                                   .fit([text], last_page.box.width - 2, last_page.box.height)
+                                   .draw(cnv, 1, y_position)
+    end
 
     def maybe_enable_ltv(io, _sign_params)
       io
