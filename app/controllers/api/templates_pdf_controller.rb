@@ -14,7 +14,7 @@ module Api
       template.account = current_account
       template.author = current_user
       template.folder = TemplateFolders.find_or_create_by_name(current_user, params[:folder_name])
-      template.name = params[:name] || 'Untitled Template'
+      template.name = params[:name] || "WippliSign ##{SecureRandom.hex(4).upcase}"
 
       Templates.maybe_assign_access(template)
 
