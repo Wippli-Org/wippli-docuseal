@@ -42,6 +42,8 @@ Rails.application.routes.draw do
     end
     # Wippli: Enable template creation from PDF via API
     resource :templates_pdf, only: %i[create], path: 'templates/pdf', controller: 'templates_pdf'
+    # Wippli: PIN verification endpoint for WipBoard
+    post 'verify_signing_key', to: 'signing_key_verification#create'
     resources :tools, only: %i[] do
       post :merge, on: :collection
       post :verify, on: :collection
