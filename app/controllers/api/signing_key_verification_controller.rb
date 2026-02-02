@@ -8,8 +8,11 @@ module Api
     def create
       RateLimit.call("verify-signing-key-#{request.remote_ip}", limit: 10, ttl: 1.minute, enabled: true)
 
+      key = params[:key].to_s.strip
+      return render json: { error: 'Invalid signing key' }, status: :not_found unless key.match?(/\A\d{6}\z/)
+
       submitter = Submitter.joins(:submission)
-                           .where("submitters.metadata->>'signing_key' = ?", params[:key].to_s.strip)
+                           .where('submitters.metadata LIKE ?', "%\"signing_key\":\"#{key}\"%")
                            .first
 
       if submitter
