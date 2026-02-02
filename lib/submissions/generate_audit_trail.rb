@@ -482,6 +482,14 @@ module Submissions
 
       composer.table(events_data, cell_style: { padding: [0, 0, 12, 0], border: { width: 0 } }) if events_data.present?
 
+      composer.formatted_text(
+        [{ text: "Digitally signed via Wippli\u00AE Sign. Powered by DocuSeal under AGPL-3.0 licence.",
+           fill_color: '999999' }],
+        font_size: 8,
+        padding: [30, 0, 0, 0],
+        text_align: :center
+      )
+
       composer.document
     end
 
@@ -506,15 +514,7 @@ module Submissions
     end
 
     def add_logo(column, _submission = nil)
-      column.image(PdfIcons.logo_io, width: 40, height: 40, position: :float)
-
-      column.formatted_text([{ text: 'DocuSeal',
-                               link: Docuseal::PRODUCT_EMAIL_URL }],
-                            font_size: 20,
-                            font: [FONT_NAME, { variant: :bold }],
-                            width: 100,
-                            padding: [5, 0, 0, 8],
-                            position: :float, text_align: :left)
+      column.image(PdfIcons.wippli_sign_io, width: 150, height: 26, position: :float)
     end
 
     def r

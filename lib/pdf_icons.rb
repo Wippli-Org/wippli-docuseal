@@ -28,6 +28,10 @@ module PdfIcons
     StringIO.new(stamp_logo_data)
   end
 
+  def wippli_sign_io
+    StringIO.new(wippli_sign_data)
+  end
+
   def check_data
     @check_data ||= PATH.join('check.png').read
   end
@@ -46,5 +50,9 @@ module PdfIcons
 
   def stamp_logo_data
     @stamp_logo_data ||= PATH.join('stamp-logo.png').read
+  end
+
+  def wippli_sign_data
+    @wippli_sign_data ||= PATH.join('wippli_sign.png').read
   end
 end
