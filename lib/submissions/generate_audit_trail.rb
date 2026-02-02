@@ -482,6 +482,14 @@ module Submissions
 
       composer.table(events_data, cell_style: { padding: [0, 0, 12, 0], border: { width: 0 } }) if events_data.present?
 
+      composer.formatted_text(
+        [{ text: "Digitally signed via Wippli\u00AE Sign. Powered by DocuSeal under AGPL-3.0 licence.",
+           fill_color: '999999' }],
+        font_size: 8,
+        padding: [30, 0, 0, 0],
+        text_align: :center
+      )
+
       composer.document
     end
 
