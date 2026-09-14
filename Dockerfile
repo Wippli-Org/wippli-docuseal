@@ -2,7 +2,7 @@ FROM ruby:3.4.2-alpine AS download
 
 WORKDIR /fonts
 
-RUN apk --no-cache add fontforge wget && \
+RUN apk --no-cache add fontforge wget unzip && \
     wget https://github.com/satbyy/go-noto-universal/releases/download/v7.0/GoNotoKurrent-Regular.ttf && \
     wget https://github.com/satbyy/go-noto-universal/releases/download/v7.0/GoNotoKurrent-Bold.ttf && \
     wget https://github.com/impallari/DancingScript/raw/master/fonts/DancingScript-Regular.otf && \
@@ -10,9 +10,14 @@ RUN apk --no-cache add fontforge wget && \
     wget https://github.com/Maxattax97/gnu-freefont/raw/master/ttf/FreeSans.ttf && \
     wget https://github.com/impallari/DancingScript/raw/master/OFL.txt && \
     wget -O /model.onnx "https://github.com/docusealco/fields-detection/releases/download/2.0.0/model_704_int8.onnx" && \
-    wget -O pdfium-linux.tgz "https://github.com/docusealco/pdfium-binaries/releases/latest/download/pdfium-linux-$(uname -m | sed 's/x86_64/x64/;s/aarch64/arm64/').tgz" && \
+    # Wippli: pdfium glibc .tgz assets were removed upstream; pin musl build (Alpine) with checksum
+    wget -O pdfium-linux.zip "https://github.com/docusealco/pdfium-binaries/releases/download/20260813/pdfium-musl-$(uname -m).zip" && \
+    case "$(uname -m)" in \
+      x86_64)  echo "c5c7dde243ecb66ab0819c8193515ef38ad53549fe260f3c2dfd93ea56eda2e7  pdfium-linux.zip" ;; \
+      aarch64) echo "64c4483449b1b4dccc696ad0c5c96e0b7f74dcc57b4f23c676b7a70671b0bbb5  pdfium-linux.zip" ;; \
+    esac | sha256sum -c - && \
     mkdir -p /pdfium-linux && \
-    tar -xzf pdfium-linux.tgz -C /pdfium-linux
+    unzip -q pdfium-linux.zip -d /pdfium-linux
 
 RUN fontforge -lang=py -c 'font1 = fontforge.open("FreeSans.ttf"); font2 = fontforge.open("NotoSansSymbols2-Regular.ttf"); font1.mergeFonts(font2); font1.generate("FreeSans.ttf")'
 
