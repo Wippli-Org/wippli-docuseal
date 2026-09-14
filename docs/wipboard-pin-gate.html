@@ -1,0 +1,201 @@
+<!--
+  WipBoard PIN Gate - Reference HTML for n8n "Generate WipBoard HTML1" Code Node
+
+  This HTML provides a PIN gateway for WipBoard pages. It:
+  1. Checks the URL for a ?signing_key= parameter (from email link)
+  2. If present: auto-validates the key against the DocuSeal API
+  3. If absent: shows a 6-digit PIN entry screen
+  4. On valid key: loads the signing form (/s/{slug}) in an iframe
+  5. On completed: shows "already signed" message
+  6. On invalid: shows error, allows retry
+
+  The signing key is the 6-digit code emailed to each party by DocuSeal.
+  No API token is needed — the signing key IS the authentication.
+
+  Variables to replace in n8n:
+  - DOCUSEAL_URL: e.g., https://docuseal.wippli.ai
+  - WIPPLI_NAME: e.g., the product/Wippli name
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ WIPPLI_NAME }} - WipBoard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+
+    /* PIN Entry Screen */
+    .pin-gate {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px;
+    }
+    .pin-card {
+      background: white; border-radius: 12px; padding: 40px; max-width: 400px; width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1); text-align: center;
+    }
+    .pin-card h2 { color: #513091; margin-bottom: 8px; font-size: 24px; }
+    .pin-card p { color: #666; margin-bottom: 24px; font-size: 14px; }
+    .pin-input {
+      display: flex; gap: 8px; justify-content: center; margin-bottom: 24px;
+    }
+    .pin-input input {
+      width: 48px; height: 56px; text-align: center; font-size: 24px; font-weight: bold;
+      border: 2px solid #ddd; border-radius: 8px; outline: none; color: #513091;
+    }
+    .pin-input input:focus { border-color: #513091; }
+    .pin-submit {
+      background: #513091; color: white; border: none; padding: 14px 40px;
+      border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%;
+    }
+    .pin-submit:hover { background: #3d2070; }
+    .pin-submit:disabled { background: #ccc; cursor: not-allowed; }
+    .pin-error { color: #e53e3e; margin-top: 12px; font-size: 14px; display: none; }
+    .pin-loading { color: #513091; margin-top: 12px; font-size: 14px; display: none; }
+
+    /* Signing iframe */
+    .signing-frame { display: none; width: 100%; height: 100vh; border: none; }
+
+    /* Completed message */
+    .completed-msg {
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 20px;
+    }
+    .completed-card {
+      background: white; border-radius: 12px; padding: 40px; max-width: 400px; width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1); text-align: center;
+    }
+    .completed-card .check { font-size: 48px; margin-bottom: 16px; }
+    .completed-card h2 { color: #513091; margin-bottom: 8px; }
+    .completed-card p { color: #666; }
+  </style>
+</head>
+<body>
+
+  <!-- PIN Entry -->
+  <div id="pinGate" class="pin-gate">
+    <div class="pin-card">
+      <h2>Signing Key Required</h2>
+      <p>Enter the 6-digit signing key from your email to access this document.</p>
+      <div class="pin-input">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+        <input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="off">
+      </div>
+      <button id="pinSubmit" class="pin-submit" disabled>Verify Key</button>
+      <div id="pinError" class="pin-error"></div>
+      <div id="pinLoading" class="pin-loading">Verifying...</div>
+    </div>
+  </div>
+
+  <!-- Signing iframe (hidden until verified) -->
+  <iframe id="signingFrame" class="signing-frame"></iframe>
+
+  <!-- Already completed message -->
+  <div id="completedMsg" class="completed-msg">
+    <div class="completed-card">
+      <div class="check">&#10003;</div>
+      <h2>Already Signed</h2>
+      <p>This document has already been signed. No further action is required.</p>
+    </div>
+  </div>
+
+  <script>
+    const DOCUSEAL_URL = '{{ DOCUSEAL_URL }}';
+    const pinInputs = document.querySelectorAll('.pin-input input');
+    const pinSubmit = document.getElementById('pinSubmit');
+    const pinError = document.getElementById('pinError');
+    const pinLoading = document.getElementById('pinLoading');
+    const pinGate = document.getElementById('pinGate');
+    const signingFrame = document.getElementById('signingFrame');
+    const completedMsg = document.getElementById('completedMsg');
+
+    // Auto-advance PIN inputs
+    pinInputs.forEach((input, i) => {
+      input.addEventListener('input', () => {
+        if (input.value && i < pinInputs.length - 1) pinInputs[i + 1].focus();
+        checkPinComplete();
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && !input.value && i > 0) pinInputs[i - 1].focus();
+      });
+      // Allow paste of full key
+      input.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const data = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+        data.split('').forEach((ch, j) => { if (pinInputs[j]) pinInputs[j].value = ch; });
+        checkPinComplete();
+      });
+    });
+
+    function checkPinComplete() {
+      const key = Array.from(pinInputs).map(i => i.value).join('');
+      pinSubmit.disabled = key.length < 6;
+    }
+
+    function getKey() {
+      return Array.from(pinInputs).map(i => i.value).join('');
+    }
+
+    async function verifyKey(key) {
+      pinError.style.display = 'none';
+      pinLoading.style.display = 'block';
+      pinSubmit.disabled = true;
+
+      try {
+        const resp = await fetch(DOCUSEAL_URL + '/api/verify_signing_key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: key })
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json();
+          throw new Error(data.error || 'Invalid signing key');
+        }
+
+        const data = await resp.json();
+
+        if (data.status === 'completed') {
+          pinGate.style.display = 'none';
+          completedMsg.style.display = 'flex';
+        } else {
+          pinGate.style.display = 'none';
+          signingFrame.src = DOCUSEAL_URL + '/s/' + data.slug;
+          signingFrame.style.display = 'block';
+        }
+      } catch (err) {
+        pinError.textContent = err.message;
+        pinError.style.display = 'block';
+        pinSubmit.disabled = false;
+      } finally {
+        pinLoading.style.display = 'none';
+      }
+    }
+
+    pinSubmit.addEventListener('click', () => verifyKey(getKey()));
+
+    // Allow Enter to submit
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !pinSubmit.disabled) verifyKey(getKey());
+    });
+
+    // Auto-validate from URL parameter
+    (function() {
+      const params = new URLSearchParams(window.location.search);
+      const signingKey = params.get('signing_key');
+      if (signingKey) {
+        // Auto-fill inputs for visual feedback
+        signingKey.split('').forEach((ch, i) => { if (pinInputs[i]) pinInputs[i].value = ch; });
+        verifyKey(signingKey);
+      } else {
+        pinInputs[0].focus();
+      }
+    })();
+  </script>
+</body>
+</html>
