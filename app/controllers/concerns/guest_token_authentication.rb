@@ -10,9 +10,9 @@
 #   - access_token (alternative)
 #
 # Token Source: Wippli Creator Node payload
-# Example tokens:
-#   - a60067b5905c9587588a71977d4aa9f4ab7d96f5c6a47c4a7e9222e7171105ce (Brannium)
-#   - 77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03 (ProLogistik)
+#
+# Accepted tokens come from the WIPPLI_GUEST_TOKENS environment variable
+# (comma-separated). Never commit real tokens to this file.
 #
 module GuestTokenAuthentication
   extend ActiveSupport::Concern
@@ -81,16 +81,39 @@ module GuestTokenAuthentication
     end
   end
 
-  # Simple token validation (development only)
-  # Accepts any 64-character hex string
-  def validate_token_simple(token)
-    return nil unless token.match?(/\A[a-f0-9]{64}\z/)
+  # Returns true only for a token that actually validates.
+  # Used by controllers to decide whether to skip authentication, so that a
+  # merely PRESENT guest_token parameter can never bypass authenticate_user!.
+  def valid_guest_token?
+    token = extract_guest_token
+    return false if token.blank?
 
-    # Return basic token data
+    @valid_guest_token_data ||= validate_guest_token(token)
+    @valid_guest_token_data.present?
+  end
+
+  # Tokens accepted by this instance, supplied as configuration.
+  # Comma-separated in WIPPLI_GUEST_TOKENS. Empty/unset means no guest access.
+  def configured_guest_tokens
+    @configured_guest_tokens ||= ENV.fetch('WIPPLI_GUEST_TOKENS', '')
+                                    .split(',').map(&:strip).reject(&:empty?)
+  end
+
+  # Token validation against configured tokens.
+  # Fails closed: an unset allowlist accepts nothing.
+  def validate_token_simple(token)
+    allowed = configured_guest_tokens
+    return nil if allowed.empty?
+
+    matched = allowed.any? do |candidate|
+      ActiveSupport::SecurityUtils.secure_compare(candidate, token.to_s)
+    end
+    return nil unless matched
+
     {
       token: token,
       validated_at: Time.current,
-      validation_method: 'simple'
+      validation_method: 'configured'
     }
   end
 

@@ -8,12 +8,12 @@
 
 **ProLogistik Token (ending in 5e03):**
 ```
-https://docuseal.wippli.ai/s/{slug}?guest_token=77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03
+https://docuseal.wippli.ai/s/{slug}?guest_token=YOUR_GUEST_TOKEN_HERE
 ```
 
 **Brannium Token (ending in 105ce):**
 ```
-https://docuseal.wippli.ai/s/{slug}?guest_token=a60067b5905c9587588a71977d4aa9f4ab7d96f5c6a47c4a7e9222e7171105ce
+https://docuseal.wippli.ai/s/{slug}?guest_token=YOUR_GUEST_TOKEN_HERE
 ```
 
 Replace `{slug}` with actual DocuSeal submission slug.
@@ -241,7 +241,7 @@ return {
 ```bash
 # Get submission slug first
 SLUG="your-submission-slug"
-TOKEN="77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03"
+TOKEN="YOUR_GUEST_TOKEN_HERE"
 
 # Test start form
 curl -I "https://docuseal.wippli.ai/d/${SLUG}?guest_token=${TOKEN}"
@@ -284,7 +284,7 @@ rails s
 1. **Check token format**: Must be 64-character hex string
    ```ruby
    # In rails console
-   token = "77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03"
+   token = "YOUR_GUEST_TOKEN_HERE"
    token.match?(/\A[a-f0-9]{64}\z/) # Should be true
    ```
 
@@ -319,7 +319,7 @@ rails s
 3. **Create test token**:
    ```ruby
    GuestToken.create!(
-     token: "77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03",
+     token: "YOUR_GUEST_TOKEN_HERE",
      product_id: 53,
      company_id: 18,
      expires_at: 1.day.from_now

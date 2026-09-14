@@ -55,7 +55,7 @@ payload      token       submission          to URL         (no login!)
   "creator_product": {
     "id": 53,
     "name": "ProLo Chat",
-    "guestToken": "77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03"
+    "guestToken": "YOUR_GUEST_TOKEN_HERE"
   },
   "creator_company": {
     "id": 18,
@@ -105,12 +105,12 @@ payload      token       submission          to URL         (no login!)
 {
   "success": true,
   "docuseal": {
-    "url": "https://docuseal.wippli.ai/s/abc123def456?guest_token=77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03",
+    "url": "https://docuseal.wippli.ai/s/abc123def456?guest_token=YOUR_GUEST_TOKEN_HERE",
     "url_without_token": "https://docuseal.wippli.ai/s/abc123def456",
     "submission_id": 12345,
     "slug": "abc123def456"
   },
-  "guest_token": "77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03",
+  "guest_token": "YOUR_GUEST_TOKEN_HERE",
   "wippli": {
     "id": 1058,
     "user_id": 10,
@@ -133,7 +133,7 @@ payload      token       submission          to URL         (no login!)
 
 **URL returned:**
 ```
-https://docuseal.wippli.ai/s/abc123def456?guest_token=77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03
+https://docuseal.wippli.ai/s/abc123def456?guest_token=YOUR_GUEST_TOKEN_HERE
 ```
 
 **What happens when user clicks:**

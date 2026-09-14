@@ -26,12 +26,12 @@
 
 **ProLogistik Token:**
 ```
-https://docuseal.wippli.ai/s/{slug}?guest_token=77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03
+https://docuseal.wippli.ai/s/{slug}?guest_token=YOUR_GUEST_TOKEN_HERE
 ```
 
 **Brannium Token:**
 ```
-https://docuseal.wippli.ai/s/{slug}?guest_token=a60067b5905c9587588a71977d4aa9f4ab7d96f5c6a47c4a7e9222e7171105ce
+https://docuseal.wippli.ai/s/{slug}?guest_token=YOUR_GUEST_TOKEN_HERE
 ```
 
 ## Current Implementation
@@ -57,7 +57,7 @@ The current implementation supports multiple parameter names to handle future pa
 **Current payload structure:**
 ```json
 {
-  "guestToken": "77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03",
+  "guestToken": "YOUR_GUEST_TOKEN_HERE",
   "resultSecure": "https://app.wippli.ai/product/53-1769483473?guest_token=...",
   "productId": 53,
   "companyId": 18,
@@ -93,7 +93,7 @@ end
 
 ### ProLogistik Token (ending in 5e03)
 ```
-Token: 77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03
+Token: YOUR_GUEST_TOKEN_HERE
 Product: 53 (ProLo Chat)
 Company: 18 (proLogistik)
 Company Code: 9d20b11edb814f4efbb8
@@ -101,7 +101,7 @@ Company Code: 9d20b11edb814f4efbb8
 
 ### Brannium Token (ending in 105ce)
 ```
-Token: a60067b5905c9587588a71977d4aa9f4ab7d96f5c6a47c4a7e9222e7171105ce
+Token: YOUR_GUEST_TOKEN_HERE
 Product: 72 (Docu Free)
 Company: 8 (Brannium)
 ```
@@ -147,7 +147,7 @@ tail -f log/development.log | grep GUEST_TOKEN
 ### 2. Test Token Access
 Visit in browser:
 ```
-http://localhost:3000/s/{slug}?guest_token=77245ec9d371ed69294c85d64f2dedfcef466da101d4d1adfcdf3fe07be45e03
+http://localhost:3000/s/{slug}?guest_token=YOUR_GUEST_TOKEN_HERE
 ```
 
 Expected:

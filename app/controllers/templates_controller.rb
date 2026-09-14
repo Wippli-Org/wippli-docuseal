@@ -4,7 +4,9 @@ class TemplatesController < ApplicationController
   include GuestTokenAuthentication  # Wippli: Enable guest token authentication for iframe embedding
 
   load_and_authorize_resource :template, except: %i[edit update]  # Wippli: Skip CanCan for edit+update to allow guest access
-  skip_before_action :authenticate_user!, only: %i[edit update], if: -> { params[:guest_token].present? || params[:guestToken].present? || session[:guest_authenticated] == true }
+  # Wippli: skip only for a token that actually validates. Presence alone is not enough:
+  # the session flag is set by authenticate_with_guest_token after a successful validation.
+  skip_before_action :authenticate_user!, only: %i[edit update], if: -> { valid_guest_token? || session[:guest_authenticated] == true }
 
   before_action :load_template_for_edit, only: [:edit]
   before_action :ensure_edit_access, only: [:edit]

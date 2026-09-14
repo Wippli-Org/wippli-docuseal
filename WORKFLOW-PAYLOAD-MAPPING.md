@@ -156,7 +156,7 @@ For testing in n8n directly, you can use this simplified version:
 {
   "creator_product": {
     "id": 72,
-    "guestToken": "a60067b5905c9587588a71977d4aa9f4ab7d96f5c6a47c4a7e9222e7171105ce"
+    "guestToken": "YOUR_GUEST_TOKEN_HERE"
   },
   "supplier_companyId": 8,
   "wippli_id": 1001,
