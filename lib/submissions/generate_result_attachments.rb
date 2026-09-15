@@ -795,7 +795,8 @@ module Submissions
     # rubocop:enable Metrics
 
     def add_wippli_attribution_footer(pdf, submitter, original_uuid)
-      last_page = pdf.pages.last
+      # HexaPDF::Document::Pages is Enumerable (no #last); #[] accepts -1 for the last page.
+      last_page = pdf.pages[-1]
       return unless last_page
 
       original_doc = submitter.submission.schema_documents.find { |d| d.uuid == original_uuid }
