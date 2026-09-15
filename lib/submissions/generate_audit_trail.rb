@@ -515,8 +515,8 @@ module Submissions
     end
 
     def add_logo(column, _submission = nil)
-      # Wippli Sign logo (wide format, includes "wippli SIGN" text)
-      column.image(PdfIcons.logo_io, width: 160, height: 28, position: :float)
+      # Wippli Sign logo (wide format, includes "wippli SIGN" text), placed as vector (PDF form XObject)
+      column.image(PdfIcons.wippli_sign_logo_pdf_io, width: 160, height: 28, position: :float)
     end
 
     def r

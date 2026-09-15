@@ -55,4 +55,14 @@ module PdfIcons
   def wippli_sign_data
     @wippli_sign_data ||= PATH.join('wippli_sign.png').read
   end
+
+  # Wippli: vector logo (one-page PDF generated from FINAL_wippli_sign_P.svg).
+  # HexaPDF places a PDF as a Form XObject, so the logo stays vector in generated PDFs.
+  def wippli_sign_logo_pdf_io
+    StringIO.new(wippli_sign_logo_pdf_data)
+  end
+
+  def wippli_sign_logo_pdf_data
+    @wippli_sign_logo_pdf_data ||= PATH.join('wippli_sign_logo.pdf').binread
+  end
 end
