@@ -7,13 +7,5 @@
        style="display:block;border:0;outline:none;text-decoration:none;">
 </p>
 <p>
-  <% if @current_account&.testing? %>
-    <%= t('sent_using_product_name_in_testing_mode',
-          product_name: Docuseal.product_name,
-          default: "Sent using #{Docuseal.product_name} in testing mode") %>
-  <% else %>
-    <%= t('sent_using_product_name_free_document_signing',
-          product_name: Docuseal.product_name,
-          default: "Sent using #{Docuseal.product_name} free document signing.") %>
-  <% end %>
+  Via Wippli&reg; Sign. Powered by DocuSeal under AGPL-3.0 licence.
 </p>
