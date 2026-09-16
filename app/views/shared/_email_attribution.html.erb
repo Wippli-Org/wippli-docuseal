@@ -2,9 +2,18 @@
   ---
 </p>
 <p>
+  <img src="<%= Docuseal::DEFAULT_APP_URL %>/wippli-sign-logo-email.png"
+       width="160" height="28" alt="<%= Docuseal.product_name %>"
+       style="display:block;border:0;outline:none;text-decoration:none;">
+</p>
+<p>
   <% if @current_account&.testing? %>
-    <%= t('sent_using_product_name_in_testing_mode_html', product_url: "#{Docuseal::PRODUCT_EMAIL_URL}/start", product_name: Docuseal.product_name) %>
+    <%= t('sent_using_product_name_in_testing_mode',
+          product_name: Docuseal.product_name,
+          default: "Sent using #{Docuseal.product_name} in testing mode") %>
   <% else %>
-    <%= t('sent_using_product_name_free_document_signing_html', product_url: "#{Docuseal::PRODUCT_EMAIL_URL}/start", product_name: Docuseal.product_name) %>
+    <%= t('sent_using_product_name_free_document_signing',
+          product_name: Docuseal.product_name,
+          default: "Sent using #{Docuseal.product_name} free document signing.") %>
   <% end %>
 </p>
