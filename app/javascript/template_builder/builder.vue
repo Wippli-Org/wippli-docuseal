@@ -2054,7 +2054,19 @@ export default {
       this.selectedAreaRef.value = area
     },
     baseFetch (path, options = {}) {
-      return fetch(this.baseUrl + path, {
+      // Wippli: carry the guest token on every builder request so edit/save
+      // works inside the cross-site WipBoard iframe, where the session cookie
+      // is blocked (SameSite / third-party). The controller's guest-token
+      // before_action accepts params[:guest_token], so no cookie is needed.
+      let url = this.baseUrl + path
+      try {
+        const guestToken = new URLSearchParams(window.location.search).get('guest_token')
+        if (guestToken) {
+          url += (url.includes('?') ? '&' : '?') + 'guest_token=' + encodeURIComponent(guestToken)
+        }
+      } catch (e) { /* window unavailable - fall back to cookie auth */ }
+
+      return fetch(url, {
         ...options,
         headers: {
           'X-CSRF-Token': this.authenticityToken,

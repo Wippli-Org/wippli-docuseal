@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ApplicationMailer < ActionMailer::Base
-  default from: 'DocuSeal <info@docuseal.com>'
+  default from: "#{ENV.fetch('SMTP_FROM_NAME', 'WippliSign')} <#{ENV.fetch('SMTP_FROM', 'notifications@wippli.ai')}>"
   layout 'mailer'
 
   register_interceptor ActionMailerConfigsInterceptor
