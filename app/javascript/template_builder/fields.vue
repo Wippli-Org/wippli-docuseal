@@ -138,7 +138,7 @@
         </div>
       </button>
       <div
-        v-else-if="type == 'phone' && (fieldTypes.length === 0 || fieldTypes.includes(type))"
+        v-else-if="!guestView && type == 'phone' && (fieldTypes.length === 0 || fieldTypes.includes(type))"
         class="tooltip tooltip-bottom flex"
         :class="{'tooltip-bottom-end': withPayment, 'tooltip-bottom': !withPayment }"
         :data-tip="t('unlock_sms_verified_phone_number_field_with_paid_plan_use_text_field_for_phone_numbers_without_verification')"
@@ -283,7 +283,7 @@ export default {
     IconDrag,
     IconLock
   },
-  inject: ['save', 'backgroundColor', 'withPhone', 'withVerification', 'withKba', 'withPayment', 't', 'fieldsDragFieldRef', 'baseFetch'],
+  inject: ['save', 'backgroundColor', 'guestView', 'withPhone', 'withVerification', 'withKba', 'withPayment', 't', 'fieldsDragFieldRef', 'baseFetch'],
   props: {
     fields: {
       type: Array,

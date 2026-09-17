@@ -68,7 +68,7 @@
               </button>
             </a>
           </li>
-          <li v-if="submitters.length < names.length && editable">
+          <li v-if="submitters.length < names.length && editable && !guestView">
             <a
               href="#"
               class="flex px-2"
@@ -193,7 +193,7 @@
         </a>
       </li>
       <li
-        v-if="submitters.length < names.length && editable && allowAddNew"
+        v-if="submitters.length < names.length && editable && allowAddNew && !guestView"
         class="w-full"
       >
         <a
@@ -237,7 +237,7 @@ export default {
     IconTrashX,
     IconChevronUp
   },
-  inject: ['t', 'save'],
+  inject: ['t', 'save', { guestView: { from: 'guestView', default: false } }],
   props: {
     submitters: {
       type: Array,

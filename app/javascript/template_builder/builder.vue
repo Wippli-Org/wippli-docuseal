@@ -55,7 +55,7 @@
       id="title_container"
       class="flex justify-between py-1.5 items-center pr-4 top-0 z-10 title-container"
       :class="{ sticky: withStickySubmitters || isBreakpointLg }"
-      :style="{ backgroundColor }"
+      :style="guestView ? { backgroundColor, position: 'relative' } : { backgroundColor }"
     >
       <div class="flex items-center space-x-3">
         <a
@@ -71,7 +71,8 @@
           v-if="withTitle"
           :model-value="template.name"
           :editable="editable"
-          class="text-xl md:text-3xl font-semibold focus:text-clip template-name"
+          :class="guestView ? 'font-semibold focus:text-clip template-name' : 'text-xl md:text-3xl font-semibold focus:text-clip template-name'"
+          :style="guestView ? 'font-size:21px;position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center' : ''"
           :icon-stroke-width="2.3"
           @update:model-value="updateName"
         />
@@ -584,6 +585,7 @@ export default {
       baseFetch: this.baseFetch,
       fieldTypes: this.fieldTypes,
       backgroundColor: this.backgroundColor,
+      guestView: this.guestView,
       withPhone: this.withPhone,
       withVerification: this.withVerification,
       withKba: this.withKba,
@@ -757,6 +759,11 @@ export default {
       type: Boolean,
       required: false,
       default: true
+    },
+    guestView: {
+      type: Boolean,
+      required: false,
+      default: false
     },
     withTitle: {
       type: Boolean,

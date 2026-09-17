@@ -4,8 +4,8 @@
     v-if="logoUrl"
     :src="logoUrl"
     :alt="appName || 'Logo'"
-    height="36"
-    style="height:36px;width:auto;max-width:180px;display:block"
+    height="31"
+    style="height:31px;width:auto;max-width:180px;display:block"
   >
   <svg
     v-else

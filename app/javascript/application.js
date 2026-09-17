@@ -161,6 +161,8 @@ safeRegisterElement('template-builder', class extends HTMLElement {
       withVerification: ['true', 'false'].includes(this.dataset.withVerification) ? this.dataset.withVerification === 'true' : null,
       withKba: ['true', 'false'].includes(this.dataset.withKba) ? this.dataset.withKba === 'true' : null,
       withLogo: this.dataset.withLogo !== 'false',
+      guestView: this.dataset.guestView === 'true',
+      withUploadButton: this.dataset.withUploadButton !== 'false',
       withFieldsDetection: this.dataset.withFieldsDetection === 'true',
       editable: this.dataset.editable !== 'false',
       authenticityToken: document.querySelector('meta[name="csrf-token"]')?.content,
