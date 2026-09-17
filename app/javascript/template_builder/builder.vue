@@ -2046,6 +2046,14 @@ export default {
           this.isSaving = true
 
           this.save().then(() => {
+            // Wippli: in the WipBoard iframe (guest token, no session cookie) the
+            // template SHOW page still enforces authenticate_user! with no guest
+            // bypass, so navigating there throws "You need to sign in or sign up
+            // before continuing." The PUT above has already persisted the fields,
+            // so stay on the editor instead of redirecting to a login-walled page.
+            if (this.guestView) {
+              return
+            }
             window.Turbo.visit(`/templates/${this.template.id}`)
           }).finally(() => {
             this.isSaving = false
