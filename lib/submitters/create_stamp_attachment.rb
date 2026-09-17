@@ -107,7 +107,7 @@ module Submitters
     end
 
     def load_logo(_submitter)
-      PdfIcons.wippli_sign_io
+      PdfIcons.stamp_logo_io
     end
   end
 end
