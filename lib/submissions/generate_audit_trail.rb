@@ -2,7 +2,7 @@
 
 module Submissions
   module GenerateAuditTrail
-    FONT_SIZE = 9
+    FONT_SIZE = 8
     TEXT_COLOR = '525252'
     FONT_PATH = '/fonts/GoNotoKurrent-Regular.ttf'
     FONT_BOLD_PATH = '/fonts/GoNotoKurrent-Bold.ttf'
@@ -21,7 +21,7 @@ module Submissions
     TESTING_FOOTER = GenerateResultAttachments::TESTING_FOOTER
 
     RTL_REGEXP = TextUtils::RTL_REGEXP
-    MAX_IMAGE_HEIGHT = 100
+    MAX_IMAGE_HEIGHT = 55
 
     CHECKSUM_LIMIT = 30
 
@@ -105,7 +105,7 @@ module Submissions
         Submissions::GenerateResultAttachments.method(:on_missing_glyph).to_proc
 
       divider = HexaPDF::Layout::Box.create(
-        margin: [0, 0, 15, 0],
+        margin: [0, 0, 6, 0],
         border: {
           width: [1, 0, 0, 0],
           color: %w[hp-gray-light]
@@ -182,19 +182,19 @@ module Submissions
         add_logo(column, submission)
 
         column.text(account.testing? ? I18n.t('testing_log_not_for_production_use') : I18n.t('audit_log'),
-                    font_size: 16,
-                    padding: [10, 0, 0, 0],
+                    font_size: 13,
+                    padding: [3, 0, 0, 0],
                     position: :float, text_align: :right)
       end
 
       composer.column(columns: 1) do |column|
-        column.text("#{I18n.t('envelope_id')}: #{submission.id}", font_size: 12,
-                                                                  padding: [15, 0, 8, 0],
+        column.text("#{I18n.t('envelope_id')}: #{submission.id}", font_size: 10,
+                                                                  padding: [5, 0, 4, 0],
                                                                   position: :float)
 
         if show_verify?(submission)
           column.formatted_text([{ link: verify_url, text: I18n.t('verify'), style: :link }],
-                                font_size: 9, padding: [15, 0, 10, 0], position: :float, text_align: :right)
+                                font_size: 9, padding: [5, 0, 4, 0], position: :float, text_align: :right)
         end
       end
 
@@ -226,13 +226,13 @@ module Submissions
               { text: "#{I18n.t('generated_at')}: ", font: [FONT_NAME, { variant: :bold }] },
               "#{I18n.l(document.created_at.in_time_zone(timezone), format: :long, locale: account.locale)} " \
               "#{TimeUtils.timezone_abbr(timezone, document.created_at)}"
-            ], line_spacing: 1.3
+            ], line_spacing: 1.05
           )
         ]
       end
 
       if documents_data.present?
-        composer.table(documents_data, cell_style: { padding: [0, 0, 20, 0], border: { width: 0 } })
+        composer.table(documents_data, cell_style: { padding: [0, 0, 8, 0], border: { width: 0 } })
 
         composer.draw_box(divider)
       end
@@ -278,7 +278,7 @@ module Submissions
                 submitter.email && { text: "#{submitter.email}\n", font: [FONT_NAME, { variant: :bold }] },
                 submitter.name && { text: "#{TextUtils.maybe_rtl_reverse(submitter.name)}\n" },
                 submitter.phone && { text: "#{submitter.phone}\n" }
-              ].compact_blank, line_spacing: 1.3, padding: [0, 20, 0, 0]
+              ].compact_blank, line_spacing: 1.05, padding: [0, 20, 0, 0]
             )
           ],
           [
@@ -299,9 +299,8 @@ module Submissions
                 completed_event.data['ip'] && { text: "IP: #{completed_event.data['ip']}\n" },
                 completed_event.data['sid'] && { text: "#{I18n.t('session_id')}: #{completed_event.data['sid']}\n" },
                 completed_event.data['ua'] && { text: "User agent: #{completed_event.data['ua']}\n" },
-                submitter.timezone && { text: "Time zone: #{submitter.timezone.to_s.sub('Kiev', 'Kyiv')}\n" },
                 "\n"
-              ].compact_blank, line_spacing: 1.3, padding: [10, 20, 20, 0]
+              ].compact_blank, line_spacing: 1.05, padding: [2, 20, 6, 0]
             )
           ]
         ]
@@ -359,7 +358,7 @@ module Submissions
                 }
               ].compact_blank,
               text_align: field_name.to_s.match?(RTL_REGEXP) ? :right : :left,
-              line_spacing: 1.3, padding: [0, 0, 2, 0]
+              line_spacing: 1.05, padding: [0, 0, 2, 0]
             ),
             if field['type'].in?(%w[image signature initials stamp kba]) &&
                (attachment = submitter.attachments.find { |a| a.uuid == value }) &&
@@ -388,7 +387,7 @@ module Submissions
                 height = MAX_IMAGE_HEIGHT
               end
 
-              composer.image(io, width:, height:, margin: [5, 0, 10, 0])
+              composer.image(io, width:, height:, margin: [2, 0, 4, 0])
               composer.formatted_text_box([{ text: '' }])
             elsif field['type'].in?(%w[file payment image])
               if field['type'] == 'payment'

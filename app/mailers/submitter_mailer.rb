@@ -105,6 +105,21 @@ class SubmitterMailer < ApplicationMailer
     end
   end
 
+  # Wippli: notify the requester when a counterparty first opens the form (DocuSign-style).
+  def form_viewed_email(submitter, recipient)
+    @current_account = submitter.submission.account
+    @submitter = submitter
+    @recipient = recipient
+    @submission = submitter.submission
+
+    I18n.with_locale(@current_account.locale) do
+      mail(from: from_address_for_submitter(submitter),
+           to: recipient.friendly_name,
+           subject: "#{@submitter.name || @submitter.email} viewed " \
+                    "#{(@submission.name || @submission.template.name).truncate(30)}")
+    end
+  end
+
   def documents_copy_email(submitter, to: nil, sig: false)
     @current_account = submitter.submission.account
     @submitter = submitter

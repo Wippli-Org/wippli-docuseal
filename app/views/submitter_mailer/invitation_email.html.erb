@@ -23,7 +23,7 @@
     <p><%= link_to nil, fallback_sign_url %></p>
   <% end %>
 <% else %>
-  <p><%= t('hi_there') %>,</p>
+  <p>Hi <%= @submitter.name.presence || 'there' %>,</p>
   <p><%= I18n.t(@submitter.with_signature_fields? ? :you_have_been_invited_to_sign_the_name : :you_have_been_invited_to_submit_the_name_form, name: @submitter.submission.name || @submitter.submission.template.name) %></p>
   <p><%= link_to I18n.t(@submitter.with_signature_fields? ? :review_and_sign : :review_and_submit), sign_url %></p>
   <% if signing_key.present? %>

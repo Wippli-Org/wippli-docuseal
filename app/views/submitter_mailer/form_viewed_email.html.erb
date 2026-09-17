@@ -1,0 +1,4 @@
+<p>Hi <%= @recipient.name.presence || 'there' %>,</p>
+<p><strong><%= @submitter.name.presence || @submitter.email %></strong> has viewed <strong><%= @submission.name || @submission.template.name %></strong>.</p>
+<p>You will receive another notification once they have signed.</p>
+<p><%= link_to submission_url(@submission), submission_url(@submission) %></p>
