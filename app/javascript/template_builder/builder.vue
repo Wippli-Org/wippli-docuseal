@@ -124,6 +124,22 @@
             </button>
           </form>
           <a
+            v-else-if="withSignYourselfButton && isGuest && guestSignUrl"
+            id="sign_yourself_button"
+            :href="guestSignUrl"
+            class="btn btn-primary btn-ghost text-base hidden md:flex"
+            data-turbo="false"
+            @click="maybeShowErrorTemplateAlert"
+          >
+            <IconWritingSign
+              width="22"
+              class="inline"
+            />
+            <span class="hidden md:inline">
+              {{ t('sign_yourself') }}
+            </span>
+          </a>
+          <a
             v-else-if="withSignYourselfButton && !isGuest"
             id="sign_yourself_button"
             :href="`/templates/${template.id}/submissions/new?selfsign=true`"
@@ -894,6 +910,17 @@ export default {
         return this.guestView || !!new URLSearchParams(window.location.search).get('guest_token')
       } catch (e) {
         return this.guestView
+      }
+    },
+    // Wippli: the arranging party's own signing form - the submission already
+    // exists (created by the pipeline), so "Sign Yourself" goes straight to it.
+    guestSignUrl () {
+      try {
+        const slug = new URLSearchParams(window.location.search).get('submitter_slug')
+
+        return slug ? `/s/${slug}` : null
+      } catch (e) {
+        return null
       }
     },
     submitterDefaultNames: FieldSubmitter.computed.names,

@@ -96,7 +96,10 @@ class TemplatesController < ApplicationController
       @brand_app_name = 'WippliSign'
     end
 
-    @is_guest_mode = guest_authenticated? && !user_signed_in?
+    # Wippli: guest mode must not depend on the session cookie - inside the
+    # cross-site WipBoard iframe the cookie is blocked, so the valid guest
+    # token in the URL is the reliable signal.
+    @is_guest_mode = (guest_authenticated? || valid_guest_token?) && !user_signed_in?
 
     render :edit, layout: 'plain'
   end
