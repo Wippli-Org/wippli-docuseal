@@ -17,6 +17,17 @@
     fallback_sign_url = submit_form_url(slug: @submitter.slug, t: tracking_param)
   end
 %>
+<%# Wippli: personal message from the sender (form "Message" field, carried in submitter metadata).
+    Rendered as a note ABOVE the standard email so the default Sign button is always kept. %>
+<% wippli_message = @submitter.metadata['wippli_message'].to_s.strip %>
+<% if wippli_message.present? %>
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 20px;">
+    <tr><td style="border-left: 3px solid #d1d5db; padding: 6px 14px;">
+      <p style="margin: 0 0 6px; font-weight: 600;">Message:</p>
+      <p style="margin: 0; white-space: pre-line;"><%= wippli_message %></p>
+    </td></tr>
+  </table>
+<% end %>
 <% if @body.present? %>
   <%= render 'custom_content', content: @body, submitter: @submitter %>
   <% if !@body.match?(ReplaceEmailVariables::SUBMITTER_LINK) && !@body.match?(ReplaceEmailVariables::SUBMITTER_ID) && !@body.match?(ReplaceEmailVariables::SUBMISSION_LINK) && !@body.match?(ReplaceEmailVariables::TEMPLATE_ID) && !@submitter.submission.source.in?(%w[api embed]) %>
