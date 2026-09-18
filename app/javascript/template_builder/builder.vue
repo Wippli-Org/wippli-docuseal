@@ -84,7 +84,7 @@
         />
         <template v-else>
           <form
-            v-if="withSignYourselfButton && template.submitters.length < 2"
+            v-if="withSignYourselfButton && template.submitters.length < 2 && !isGuest"
             target="_blank"
             data-turbo="false"
             class="inline"
@@ -124,7 +124,7 @@
             </button>
           </form>
           <a
-            v-else-if="withSignYourselfButton"
+            v-else-if="withSignYourselfButton && !isGuest"
             id="sign_yourself_button"
             :href="`/templates/${template.id}/submissions/new?selfsign=true`"
             class="btn btn-primary btn-ghost text-base hidden md:flex"
@@ -140,7 +140,7 @@
             </span>
           </a>
           <a
-            v-if="withSendButton"
+            v-if="withSendButton && !isGuest"
             id="send_button"
             :href="`/templates/${template.id}/submissions/new?with_link=true`"
             data-turbo-frame="modal"
@@ -885,6 +885,17 @@ export default {
     }
   },
   computed: {
+    // Wippli: reliable guest detection for the cross-site WipBoard iframe.
+    // Modern browsers block the session cookie in the iframe, so guestView
+    // (session-derived) is not dependable — the guest_token in the URL always is.
+    // In this mode we must not navigate to auth-walled pages (show, submissions/new).
+    isGuest () {
+      try {
+        return this.guestView || !!new URLSearchParams(window.location.search).get('guest_token')
+      } catch (e) {
+        return this.guestView
+      }
+    },
     submitterDefaultNames: FieldSubmitter.computed.names,
     selectedAreaRef: () => ref(),
     fieldsDragFieldRef: () => ref(),
@@ -2051,7 +2062,7 @@ export default {
             // bypass, so navigating there throws "You need to sign in or sign up
             // before continuing." The PUT above has already persisted the fields,
             // so stay on the editor instead of redirecting to a login-walled page.
-            if (this.guestView) {
+            if (this.isGuest) {
               return
             }
             window.Turbo.visit(`/templates/${this.template.id}`)
