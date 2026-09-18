@@ -136,7 +136,7 @@
               class="inline"
             />
             <span class="hidden md:inline">
-              {{ t('sign_yourself') }}
+              {{ isSendOnly ? 'Fill in my details' : t('sign_yourself') }}
             </span>
           </a>
           <a
@@ -921,6 +921,15 @@ export default {
         return slug ? `/s/${slug}` : null
       } catch (e) {
         return null
+      }
+    },
+    // Wippli: Send Only delivery - the sender may add their own details (text
+    // fields for themselves only); the recipient only views, so they need no fields.
+    isSendOnly () {
+      try {
+        return new URLSearchParams(window.location.search).get('send_only') === '1'
+      } catch (e) {
+        return false
       }
     },
     submitterDefaultNames: FieldSubmitter.computed.names,
@@ -2051,8 +2060,9 @@ export default {
 
         alert(this.t('please_draw_fields_to_prepare_the_document'))
       } else {
-        const submitterWithoutFields =
-          this.template.submitters.find((submitter) => !this.template.fields.some((f) => f.submitter_uuid === submitter.uuid))
+        const submitterWithoutFields = this.isSendOnly
+          ? null
+          : this.template.submitters.find((submitter) => !this.template.fields.some((f) => f.submitter_uuid === submitter.uuid))
 
         if (submitterWithoutFields) {
           e.preventDefault()
@@ -2075,8 +2085,9 @@ export default {
       if (!this.template.fields.length) {
         alert(this.t('please_draw_fields_to_prepare_the_document'))
       } else {
-        const submitterWithoutFields =
-          this.template.submitters.find((submitter) => !this.template.fields.some((f) => f.submitter_uuid === submitter.uuid))
+        const submitterWithoutFields = this.isSendOnly
+          ? null
+          : this.template.submitters.find((submitter) => !this.template.fields.some((f) => f.submitter_uuid === submitter.uuid))
 
         if (submitterWithoutFields) {
           alert(this.t('please_add_fields_for_the_submitter_name_or_remove_the_submitter_name_if_not_needed').replaceAll('{submitter_name}', submitterWithoutFields.name))
