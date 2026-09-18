@@ -40,8 +40,12 @@ class SubmitterMailer < ApplicationMailer
       subject = build_invite_subject(@subject, @email_config, submitter)
 
       # Wippli: Send Only delivery - nothing to sign, the wording must not imply it.
+      # The first submitter is the SENDER (gets the key to review and send); the
+      # other is the RECIPIENT (gets the key to open what was sent).
       if submitter.metadata['wippli_delivery'] == 'send_only'
-        subject = "You have been sent the document: #{submitter.submission.name || submitter.submission.template.name}"
+        doc_name = submitter.submission.name || submitter.submission.template.name
+        @send_only_sender = submitter.submission.submitters.min_by(&:id)&.id == submitter.id
+        subject = @send_only_sender ? "Send the document: #{doc_name}" : "You have been sent the document: #{doc_name}"
       end
 
       mail(

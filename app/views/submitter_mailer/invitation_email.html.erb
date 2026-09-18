@@ -28,8 +28,21 @@
     </td></tr>
   </table>
 <% end %>
-<% if @submitter.metadata['wippli_delivery'] == 'send_only' %>
-  <%# Wippli: Send Only - the document is sent to the recipient; no signing, no acceptance. %>
+<% if @submitter.metadata['wippli_delivery'] == 'send_only' && @send_only_sender %>
+  <%# Wippli: Send Only - SENDER copy: the key opens the board to review and send. %>
+  <% recipient = @submitter.submission.submitters.reject { |s| s.id == @submitter.id }.first %>
+  <p>Hi <%= @submitter.name.presence || 'there' %>,</p>
+  <p>The document "<%= @submitter.submission.name || @submitter.submission.template.name %>" is ready to send<% if recipient %> to <%= recipient.name.presence || recipient.email %> &lt;<%= recipient.email %>&gt;<% end %>.</p>
+  <p><%= link_to 'Review and send', sign_url %></p>
+  <% if signing_key.present? %>
+    <p style="margin: 16px 0;">Your access key: <strong style="font-size: 20px; letter-spacing: 4px; background: #f3f4f6; padding: 8px 16px; border-radius: 6px; font-family: monospace;"><%= signing_key %></strong></p>
+    <p style="font-size: 13px; color: #666;">Enter this key on the task to review the document and press Send. Nothing is sent until you do.</p>
+  <% end %>
+  <p>
+  <%= t('thanks') %>,<br><%= @current_account.name %>
+  </p>
+<% elsif @submitter.metadata['wippli_delivery'] == 'send_only' %>
+  <%# Wippli: Send Only - RECIPIENT copy: the document was sent to them; no signing, no acceptance. %>
   <p>Hi <%= @submitter.name.presence || 'there' %>,</p>
   <p>You have been sent the document "<%= @submitter.submission.name || @submitter.submission.template.name %>" by <%= @current_account.name %>.</p>
   <p><%= link_to 'Open document', sign_url %></p>
