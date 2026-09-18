@@ -23,6 +23,10 @@ class SubmitFormController < ApplicationController
 
     @form_configs = Submitters::FormConfigs.call(@submitter, CONFIG_KEYS)
 
+    # Wippli: Send Only (service) delivery - the document is shared for the record; there is
+    # nothing to accept, so there is nothing to decline either.
+    @form_configs = @form_configs.merge(with_decline: false) if @submitter.metadata['wippli_delivery'] == 'send_only'
+
     return render :awaiting if (@form_configs[:enforce_signing_order] ||
                                 submission.template&.preferences&.dig('submitters_order') == 'preserved') &&
                                !Submitters.current_submitter_order?(@submitter)

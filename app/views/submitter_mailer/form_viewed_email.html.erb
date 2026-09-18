@@ -1,4 +1,10 @@
 <p>Hi <%= @recipient.name.presence || 'there' %>,</p>
-<p><strong><%= @submitter.name.presence || @submitter.email %></strong> has viewed <strong><%= @submission.name || @submission.template.name %></strong>.</p>
-<p>You will receive another notification once they have signed.</p>
+<% if @send_only %>
+  <%# Wippli: Send Only - the recipient entered the key sent to their address and opened the document. That is service. %>
+  <p><strong><%= @submitter.name.presence || @submitter.email %></strong> (<%= @submitter.email %>) opened <strong><%= @submission.name || @submission.template.name %></strong> on <%= (@submitter.opened_at || Time.current).strftime('%d %b %Y %H:%M %Z') %> using the access key sent to that address.</p>
+  <p>The document has been served. Nothing further is required from either party.</p>
+<% else %>
+  <p><strong><%= @submitter.name.presence || @submitter.email %></strong> has viewed <strong><%= @submission.name || @submission.template.name %></strong>.</p>
+  <p>You will receive another notification once they have signed.</p>
+<% end %>
 <p><%= link_to submission_url(@submission), submission_url(@submission) %></p>

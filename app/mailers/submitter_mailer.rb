@@ -39,6 +39,11 @@ class SubmitterMailer < ApplicationMailer
     I18n.with_locale(@current_account.locale) do
       subject = build_invite_subject(@subject, @email_config, submitter)
 
+      # Wippli: Send Only (service) delivery - nothing to sign, the wording must not imply it.
+      if submitter.metadata['wippli_delivery'] == 'send_only'
+        subject = "Document shared with you: #{submitter.submission.name || submitter.submission.template.name}"
+      end
+
       mail(
         to: @submitter.friendly_name,
         from: from_address_for_submitter(submitter),
@@ -112,10 +117,14 @@ class SubmitterMailer < ApplicationMailer
     @recipient = recipient
     @submission = submitter.submission
 
+    # Wippli: for Send Only delivery the view IS the proof of service.
+    @send_only = submitter.metadata['wippli_delivery'] == 'send_only'
+
     I18n.with_locale(@current_account.locale) do
       mail(from: from_address_for_submitter(submitter),
            to: recipient.friendly_name,
-           subject: "#{@submitter.name || @submitter.email} viewed " \
+           subject: "#{@send_only ? 'Served: ' : ''}#{@submitter.name || @submitter.email} " \
+                    "#{@send_only ? 'opened' : 'viewed'} " \
                     "#{(@submission.name || @submission.template.name).truncate(30)}")
     end
   end

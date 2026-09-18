@@ -28,7 +28,20 @@
     </td></tr>
   </table>
 <% end %>
-<% if @body.present? %>
+<% if @submitter.metadata['wippli_delivery'] == 'send_only' %>
+  <%# Wippli: Send Only (service) - shared for the record; no signing, no acceptance. %>
+  <p>Hi <%= @submitter.name.presence || 'there' %>,</p>
+  <p><%= @current_account.name %> has shared the "<%= @submitter.submission.name || @submitter.submission.template.name %>" with you for your records.</p>
+  <p><%= link_to 'Open document', sign_url %></p>
+  <% if signing_key.present? %>
+    <p style="margin: 16px 0;">Your access key: <strong style="font-size: 20px; letter-spacing: 4px; background: #f3f4f6; padding: 8px 16px; border-radius: 6px; font-family: monospace;"><%= signing_key %></strong></p>
+    <p style="font-size: 13px; color: #666;">Enter this key on the page to open the document.</p>
+  <% end %>
+  <p><%= t('please_contact_us_by_replying_to_this_email_if_you_have_any_questions') %></p>
+  <p>
+  <%= t('thanks') %>,<br><%= @current_account.name %>
+  </p>
+<% elsif @body.present? %>
   <%= render 'custom_content', content: @body, submitter: @submitter %>
   <% if !@body.match?(ReplaceEmailVariables::SUBMITTER_LINK) && !@body.match?(ReplaceEmailVariables::SUBMITTER_ID) && !@body.match?(ReplaceEmailVariables::SUBMISSION_LINK) && !@body.match?(ReplaceEmailVariables::TEMPLATE_ID) && !@submitter.submission.source.in?(%w[api embed]) %>
     <p><%= link_to nil, fallback_sign_url %></p>
