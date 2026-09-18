@@ -2063,6 +2063,15 @@ export default {
             // before continuing." The PUT above has already persisted the fields,
             // so stay on the editor instead of redirecting to a login-walled page.
             if (this.isGuest) {
+              // Wippli: the arranging party (submitter_slug in the editor URL)
+              // continues straight to their own signing page - no auth-walled
+              // show page in between.
+              const slug = new URLSearchParams(window.location.search).get('submitter_slug')
+
+              if (slug) {
+                window.location.assign(`/s/${slug}`)
+              }
+
               return
             }
             window.Turbo.visit(`/templates/${this.template.id}`)
