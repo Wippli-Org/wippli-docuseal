@@ -25,7 +25,7 @@ module Templates
     # party, and so that fill-in blanks elsewhere in the body are never mistaken
     # for signature fields. A party heading is also required to be short - real
     # headings, not sentences that happen to contain a keyword.
-    SIG_SECTION = /\ASignatures?\s*:?\s*\z/i
+    SIG_SECTION = /\ASignatures?\z/i
     MAX_HEADING_LEN = 80
 
     LINE_Y_TOLERANCE = 0.004
@@ -52,10 +52,7 @@ module Templates
           underscores = underscore_boxes(nodes)
 
           lines_for(nodes).each do |line|
-            # Pdfium text nodes are per-glyph, so join WITHOUT a separator (a
-            # separator would explode "Signatures" into "S i g n a t u r e s");
-            # any real spaces are their own glyph nodes and are preserved.
-            text = line.map(&:content).join.gsub(/\s+/, ' ').strip
+            text = line.map(&:content).join(' ').gsub(/\s+/, ' ').strip
             next if text.empty?
 
             unless in_sig
