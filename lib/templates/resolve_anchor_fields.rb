@@ -20,6 +20,13 @@ module Templates
     PARTY_N = /\bParty\s*(\d+)\b/i
     # a field line starts with its type word and carries a ruled underscore line
     FIELD_HEAD = /\A\s*(Signature|Name|Title|Date)\b/i
+    # the signatures section boundary. Detection is confined to it so that body
+    # prose (which mentions "Wippli" etc. constantly) can never set the current
+    # party, and so that fill-in blanks elsewhere in the body are never mistaken
+    # for signature fields. A party heading is also required to be short - real
+    # headings, not sentences that happen to contain a keyword.
+    SIG_SECTION = /\ASignatures?\z/i
+    MAX_HEADING_LEN = 80
 
     LINE_Y_TOLERANCE = 0.004
     MIN_UNDERSCORES  = 2
@@ -33,7 +40,8 @@ module Templates
     def call(io, submitters:, attachment_uuid: nil)
       doc = Pdfium::Document.open_bytes(io.read)
       fields = []
-      current = nil # submitter index of the block we are inside
+      current = nil    # submitter index of the block we are inside
+      in_sig = false   # only detect once we are inside the signatures section
 
       doc.page_count.times do |page_number|
         page = doc.get_page(page_number)
@@ -46,6 +54,11 @@ module Templates
           lines_for(nodes).each do |line|
             text = line.map(&:content).join(' ').gsub(/\s+/, ' ').strip
             next if text.empty?
+
+            unless in_sig
+              in_sig = true if text.match?(SIG_SECTION)
+              next
+            end
 
             slot = party_slot(text, submitters)
             unless slot.nil?
@@ -85,16 +98,24 @@ module Templates
     end
 
     # Returns the submitter index if this line is a party heading, else nil.
+    # Conservative: never guesses. An explicit "Party N" wins; otherwise the line
+    # must be short (a heading, not a sentence) and match exactly one party's
+    # keyword set - a line matching both is ambiguous and is left for the next,
+    # unambiguous heading rather than risk assigning fields to the wrong signer.
     def party_slot(text, submitters)
       if (m = text.match(PARTY_N))
         idx = m[1].to_i - 1
         return idx if submitters[idx]
       end
-      # heading keywords only count when the line is NOT itself a field line
-      return nil if text.match?(FIELD_HEAD)
+      # field lines are never headings; overly long lines are prose, not headings
+      return nil if text.match?(FIELD_HEAD) || text.length > MAX_HEADING_LEN
 
-      return 0 if text.match?(PARTY1)
-      return 1 if text.match?(PARTY2) && submitters[1]
+      p1 = text.match?(PARTY1)
+      p2 = text.match?(PARTY2) && !submitters[1].nil?
+      return nil if p1 && p2 # ambiguous - do not guess
+
+      return 0 if p1
+      return 1 if p2
 
       nil
     end
