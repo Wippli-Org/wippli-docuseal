@@ -14,6 +14,14 @@ class TemplatesController < ApplicationController
   before_action :authenticate_user!, only: %i[edit update],
                 unless: -> { valid_guest_token? || session[:guest_authenticated] == true }
 
+  # Wippli: the editor runs inside the cross-site WipBoard iframe, where the
+  # session cookie is blocked (SameSite), so Rails cannot match the CSRF token
+  # on save -> the SAVE button 422s ("The change you wanted was rejected").
+  # The guest_token IS the authorization for this request, so skip CSRF
+  # verification for guest-token saves only. Normal (logged-in) updates keep it.
+  skip_before_action :verify_authenticity_token, only: %i[update], raise: false,
+                     if: -> { valid_guest_token? }
+
   before_action :load_template_for_edit, only: [:edit]
   before_action :ensure_edit_access, only: [:edit]
   before_action :load_template_for_guest_update, only: [:update]
