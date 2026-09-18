@@ -20,23 +20,35 @@ module Api
 
       template.save!
 
+      # Wippli: anchor-based field mapping. When resolve_anchors is set, fields come
+      # from the document's own "(Party N)" anchors across ALL pages, not from the
+      # ML/single-page detector - so nothing is dropped and roles are self-describing.
+      resolve_anchors = ActiveModel::Type::Boolean.new.cast(params[:resolve_anchors])
+
       documents_params = build_documents_params(params[:documents])
-      documents = Templates::CreateAttachments.call(template, documents_params, extract_fields: true)
+      documents = Templates::CreateAttachments.call(template, documents_params, extract_fields: !resolve_anchors)
 
       schema = documents.map { |doc| { attachment_uuid: doc.uuid, name: doc.filename.base } }
 
-      if template.fields.blank?
-        template.fields = Templates::ProcessDocument.normalize_attachment_fields(template, documents)
-        schema.each { |item| item['pending_fields'] = true } if template.fields.present?
-      end
-
-      # Wippli: Set submitters if provided in params (replace default)
+      # Wippli: Set submitters if provided in params (replace default). Must happen
+      # BEFORE anchor resolution so "(Party N)" can map to a submitter uuid.
       # Support both 'roles' (array of strings) and 'submitters' (array of hashes)
       if params[:roles].present? || params[:submitters].present?
         roles = params[:roles].presence || params[:submitters].map { |s| s[:name] || s['name'] || s[:role] || s['role'] }
         template.submitters = Array.wrap(roles).map do |role_name|
           { 'name' => role_name, 'uuid' => SecureRandom.uuid }
         end
+      end
+
+      if resolve_anchors
+        template.fields = documents.flat_map do |doc|
+          Templates::ResolveAnchorFields.call(StringIO.new(doc.download),
+                                              submitters: template.submitters,
+                                              attachment_uuid: doc.uuid)
+        end
+      elsif template.fields.blank?
+        template.fields = Templates::ProcessDocument.normalize_attachment_fields(template, documents)
+        schema.each { |item| item['pending_fields'] = true } if template.fields.present?
       end
 
       template.update!(schema:)
