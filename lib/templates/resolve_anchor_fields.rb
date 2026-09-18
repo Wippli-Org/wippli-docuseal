@@ -1,37 +1,79 @@
 # frozen_string_literal: true
 
 module Templates
-  # Wippli: anchor-based field resolver.
+  # Wippli: heading-anchored field resolver.
   #
-  # The signing document carries a self-describing anchor on each field line, e.g.
-  #   "Signature (Party 1): ______"   "Name (Party 2): ______"
-  # The field TYPE comes from the leading word (Name/Title/Date/Signature) and the
-  # ROLE from "(Party N)". This binds each field to TEXT, not coordinates, so it
-  # survives any layout change in the source (Outline) — and it scans EVERY page,
-  # unlike the previous single-page parser that dropped Party 1 / multi-page fields.
+  # Each signing block is introduced by a party heading that already names the
+  # party once - "WIPPLI ...", "COUNTERPARTY ...", "PROCESSOR/CONTROLLER ...",
+  # "... (Assignee)/(Assignor)" - so field lines stay clean ("Name:", "Signature:").
+  # The resolver walks the document in reading order across EVERY page, tracks the
+  # current party from the most recent heading, and binds each ruled field line to
+  # it. This fixes the previous single-page parser that dropped Party 1 and
+  # multi-page blocks, without repeating a role tag on every line.
+  #
+  # Party 1 = submitters[0], Party 2 = submitters[1]. The keyword sets below map
+  # the heading wording to a slot and can be extended as new role words appear.
   module ResolveAnchorFields
-    # word + "(Party N)"; whitespace is tolerant because PDF text nodes may join
-    # with or without spaces.
-    ANCHOR = /\b(Signature|Name|Title|Date)\s*\(\s*Party\s*(\d+)\s*\)/i
-    LINE_Y_TOLERANCE = 0.004  # ~1.2mm on A4 - group text nodes into the same line
+    PARTY1 = /\b(WIPPLI|PROCESSOR|ASSIGNEE|DISCLOSER)\b/i
+    PARTY2 = /\b(COUNTERPARTY|CONTROLLER|ASSIGNOR|RECIPIENT)\b/i
+    # explicit override wins if a heading spells the slot out: "Party 1" / "Party 2"
+    PARTY_N = /\bParty\s*(\d+)\b/i
+    # a field line starts with its type word and carries a ruled underscore line
+    FIELD_HEAD = /\A\s*(Signature|Name|Title|Date)\b/i
+
+    LINE_Y_TOLERANCE = 0.004
     MIN_UNDERSCORES  = 2
-    UNDERSCORE_GAP   = 0.02   # max x-gap between consecutive underscore glyphs
-    SIG_MIN_H        = 0.045  # signatures get a taller box than a text line
+    UNDERSCORE_GAP   = 0.02
+    SIG_MIN_H        = 0.045
     SIG_MAX_H        = 0.09
 
     module_function
 
-    # io: an IO for the PDF. submitters: template.submitters array (ordered;
-    # index 0 = Party 1, index 1 = Party 2, ...). Returns a fields array shaped
-    # like the rest of the pipeline expects.
+    # io: PDF IO. submitters: template.submitters (index 0 = Party 1, 1 = Party 2).
     def call(io, submitters:, attachment_uuid: nil)
       doc = Pdfium::Document.open_bytes(io.read)
       fields = []
+      current = nil # submitter index of the block we are inside
 
       doc.page_count.times do |page_number|
         page = doc.get_page(page_number)
         begin
-          resolve_page(page, page_number, submitters, attachment_uuid, fields)
+          nodes = page.text_nodes.to_a.sort_by { |n| [n.y.round(3), n.x] }
+          next if nodes.empty?
+
+          underscores = underscore_boxes(nodes)
+
+          lines_for(nodes).each do |line|
+            text = line.map(&:content).join(' ').gsub(/\s+/, ' ').strip
+            next if text.empty?
+
+            slot = party_slot(text, submitters)
+            unless slot.nil?
+              current = slot
+              next
+            end
+
+            head = text.match(FIELD_HEAD)
+            next unless head && current
+
+            area = field_area_for(line, underscores)
+            next if area.nil? # only real ruled lines become fields
+
+            type = type_for(head[1])
+            area = grow_signature(area) if type == 'signature'
+            submitter = submitters[current]
+            next if submitter.blank?
+
+            fields << {
+              'uuid' => SecureRandom.uuid,
+              'submitter_uuid' => submitter['uuid'],
+              'name' => head[1].capitalize,
+              'type' => type,
+              'required' => type == 'signature',
+              'preferences' => {},
+              'areas' => [area.merge('page' => page_number, 'attachment_uuid' => attachment_uuid)]
+            }
+          end
         ensure
           page.close
         end
@@ -42,46 +84,25 @@ module Templates
       doc&.close
     end
 
-    def resolve_page(page, page_number, submitters, attachment_uuid, fields)
-      nodes = page.text_nodes.to_a.sort_by { |n| [n.y.round(3), n.x] }
-      return if nodes.empty?
-
-      underscores = underscore_boxes(nodes)
-
-      lines_for(nodes).each do |line|
-        text = line.map(&:content).join
-        match = text.match(ANCHOR)
-        next unless match
-
-        role_index = match[2].to_i - 1
-        submitter  = submitters[role_index]
-        next if submitter.blank?
-
-        type = type_for(match[1])
-
-        area = field_area_for(line, underscores)
-        next if area.nil?
-
-        area = grow_signature(area) if type == 'signature'
-
-        fields << {
-          'uuid' => SecureRandom.uuid,
-          'submitter_uuid' => submitter['uuid'],
-          'name' => "#{match[1].capitalize} (Party #{match[2]})",
-          'type' => type,
-          'required' => type == 'signature',
-          'preferences' => {},
-          'areas' => [area.merge('page' => page_number, 'attachment_uuid' => attachment_uuid)]
-        }
+    # Returns the submitter index if this line is a party heading, else nil.
+    def party_slot(text, submitters)
+      if (m = text.match(PARTY_N))
+        idx = m[1].to_i - 1
+        return idx if submitters[idx]
       end
+      # heading keywords only count when the line is NOT itself a field line
+      return nil if text.match?(FIELD_HEAD)
+
+      return 0 if text.match?(PARTY1)
+      return 1 if text.match?(PARTY2) && submitters[1]
+
+      nil
     end
 
-    # Group text nodes (already sorted) into visual lines by y proximity.
     def lines_for(nodes)
       lines = []
       current = []
       current_y = nil
-
       nodes.each do |node|
         if current_y.nil? || (node.y - current_y).abs <= LINE_Y_TOLERANCE
           current << node
@@ -96,14 +117,15 @@ module Templates
       lines.each { |l| l.sort_by!(&:x) }
     end
 
-    # Ruled underscore runs across the whole page (>= MIN_UNDERSCORES '_' glyphs).
     def underscore_boxes(nodes)
       boxes = []
       i = 0
       while i < nodes.length
         node = nodes[i]
-        (i += 1) and next if node.content != '_'
-
+        if node.content != '_'
+          i += 1
+          next
+        end
         x1 = node.x; y1 = node.y; x2 = node.endx; y2 = node.endy; count = 1
         j = i + 1
         while j < nodes.length && nodes[j].content == '_'
@@ -118,20 +140,14 @@ module Templates
       boxes
     end
 
-    # The field box is the ruled underscore run on the anchor's own line, to the
-    # right of the label. Falls back to a box after the label if no rule is drawn.
+    # The ruled underscore run on the field line, to the right of the label.
     def field_area_for(line, underscores)
       line_y = line.map(&:y).min
       line_h = line.map(&:h).max
-      label_end = line.map(&:endx).max
-
       box = underscores.find do |b|
         (b['y'] - line_y).abs <= (line_h + LINE_Y_TOLERANCE) && (b['x'] + b['w']) > line.first.x
       end
-      return box.dup if box
-
-      # no drawn rule: place a default box after the label text
-      { 'x' => label_end + 0.01, 'y' => line_y, 'w' => 0.35, 'h' => line_h }
+      box&.dup
     end
 
     def grow_signature(area)
