@@ -1,4 +1,6 @@
+<%# Wippli: Send Only delivery - nothing is signed on this page, so it says so. %>
+<% send_only = defined?(@submitter) && @submitter.respond_to?(:metadata) && @submitter.metadata['wippli_delivery'] == 'send_only' %>
 <div class="text-center px-2">
-  Digitally signed via Wippli&reg; Sign. Powered by
+  <%= send_only ? 'Sent via' : 'Digitally signed via' %> Wippli&reg; Sign. Powered by
   <a href="https://github.com/Wippli-Org/wippli-docuseal" class="underline">DocuSeal</a> under AGPL-3.0 licence.
 </div>
