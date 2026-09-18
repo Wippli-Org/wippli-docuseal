@@ -29,9 +29,9 @@
   </table>
 <% end %>
 <% if @submitter.metadata['wippli_delivery'] == 'send_only' %>
-  <%# Wippli: Send Only (service) - shared for the record; no signing, no acceptance. %>
+  <%# Wippli: Send Only - the document is sent to the recipient; no signing, no acceptance. %>
   <p>Hi <%= @submitter.name.presence || 'there' %>,</p>
-  <p><%= @current_account.name %> has shared the "<%= @submitter.submission.name || @submitter.submission.template.name %>" with you for your records.</p>
+  <p>You have been sent the document "<%= @submitter.submission.name || @submitter.submission.template.name %>" by <%= @current_account.name %>.</p>
   <p><%= link_to 'Open document', sign_url %></p>
   <% if signing_key.present? %>
     <p style="margin: 16px 0;">Your access key: <strong style="font-size: 20px; letter-spacing: 4px; background: #f3f4f6; padding: 8px 16px; border-radius: 6px; font-family: monospace;"><%= signing_key %></strong></p>
