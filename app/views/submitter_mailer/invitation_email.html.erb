@@ -20,7 +20,9 @@
 <%# Wippli: personal message from the sender (form "Message" field, carried in submitter metadata).
     Rendered as a note ABOVE the standard email so the default Sign button is always kept. %>
 <% wippli_message = @submitter.metadata['wippli_message'].to_s.strip %>
-<% if wippli_message.present? %>
+<%# In the Send Only recipient email the message sits AFTER the opening line (rendered further down). %>
+<% send_only_recipient = @submitter.metadata['wippli_delivery'] == 'send_only' && !@send_only_sender %>
+<% if wippli_message.present? && !send_only_recipient %>
   <table width="100%" cellpadding="0" cellspacing="0" style="margin: 0 0 20px;">
     <tr><td style="border-left: 3px solid #d1d5db; padding: 6px 14px;">
       <p style="margin: 0 0 6px; font-weight: 600;">Message:</p>
@@ -45,6 +47,14 @@
   <%# Wippli: Send Only - RECIPIENT copy: the document was sent to them; no signing, no acceptance. %>
   <p>Hi <%= @submitter.name.presence || 'there' %>,</p>
   <p>You have been sent the document "<%= @submitter.submission.name || @submitter.submission.template.name %>" by <%= @current_account.name %>.</p>
+  <% if wippli_message.present? %>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin: 16px 0 20px;">
+      <tr><td style="border-left: 3px solid #d1d5db; padding: 6px 14px;">
+        <p style="margin: 0 0 6px; font-weight: 600;">Message:</p>
+        <p style="margin: 0; white-space: pre-line;"><%= wippli_message %></p>
+      </td></tr>
+    </table>
+  <% end %>
   <p><%= link_to 'Open document', sign_url %></p>
   <% if signing_key.present? %>
     <p style="margin: 16px 0;">Your access key: <strong style="font-size: 20px; letter-spacing: 4px; background: #f3f4f6; padding: 8px 16px; border-radius: 6px; font-family: monospace;"><%= signing_key %></strong></p>
