@@ -403,7 +403,17 @@ export default {
       }, {})
     },
     skipTypes () {
-      return ['heading', 'datenow', 'strikethrough']
+      const types = ['heading', 'datenow', 'strikethrough']
+
+      // Wippli: Send Only delivery (send_only=1) - the sender only fills in details;
+      // nothing is signed, so the signature-type tiles are not offered.
+      try {
+        if (new URLSearchParams(window.location.search).get('send_only') === '1') {
+          types.push('signature', 'initials', 'stamp')
+        }
+      } catch (e) { /* window unavailable */ }
+
+      return types
     },
     fieldIconsSorted () {
       if (this.fieldTypes.length) {
