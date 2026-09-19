@@ -80,6 +80,9 @@ module Submitters
 
       digitally_signed_by = I18n.t(:digitally_signed_by, locale: submitter.submission.account.locale)
 
+      # Wippli: Send Only delivery - nothing is signed; the stamp records who sent the document.
+      digitally_signed_by = 'Sent by' if submitter.metadata['wippli_delivery'] == 'send_only'
+
       name = ERB::Util.html_escape(name)
       role = ERB::Util.html_escape(role)
 
