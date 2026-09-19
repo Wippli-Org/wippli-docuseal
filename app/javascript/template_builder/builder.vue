@@ -71,7 +71,7 @@
           v-if="withTitle"
           :model-value="template.name"
           :editable="editable"
-          :class="guestView ? 'font-semibold focus:text-clip template-name' : 'text-xl md:text-3xl font-semibold focus:text-clip template-name'"
+          :class="guestView ? 'hidden md:block font-semibold focus:text-clip template-name' : 'text-xl md:text-3xl font-semibold focus:text-clip template-name'"
           :style="guestView ? 'font-size:21px;position:absolute;left:50%;transform:translateX(-50%);white-space:nowrap;text-align:center' : ''"
           :icon-stroke-width="2.3"
           @update:model-value="updateName"
