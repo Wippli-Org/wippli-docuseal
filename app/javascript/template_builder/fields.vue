@@ -406,10 +406,11 @@ export default {
       const types = ['heading', 'datenow', 'strikethrough']
 
       // Wippli: Send Only delivery (send_only=1) - the sender only fills in details;
-      // nothing is signed, so the signature-type tiles are not offered.
+      // nothing is signed, so Signature and Initials are not offered. Stamp stays:
+      // the sender may stamp the document they send.
       try {
         if (new URLSearchParams(window.location.search).get('send_only') === '1') {
-          types.push('signature', 'initials', 'stamp')
+          types.push('signature', 'initials')
         }
       } catch (e) { /* window unavailable */ }
 
