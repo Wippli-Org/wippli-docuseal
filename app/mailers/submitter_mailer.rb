@@ -272,11 +272,16 @@ class SubmitterMailer < ApplicationMailer
   end
 
   def from_address_for_submitter(submitter)
-    # Wippli: Use SMTP_FROM env var if set (must match verified SendGrid domain)
+    # Wippli: Use SMTP_FROM env var if set (must match verified SendGrid domain).
+    # Carry SMTP_FROM_NAME as the display name so recipient emails read
+    # "Wippli Sign <wippli-sign@wippli.ai>" like the rest of the mailers.
     if ENV['SMTP_FROM'].present?
       user = submitter.submission.created_by_user || submitter.submission.template.author
       put_metadata('from_user_id' => user.id)
-      return ENV['SMTP_FROM']
+
+      from_name = ENV['SMTP_FROM_NAME'].presence
+
+      return from_name ? %("#{from_name.delete('"')}" <#{ENV.fetch('SMTP_FROM')}>) : ENV.fetch('SMTP_FROM')
     end
 
     if submitter.submission.source.in?(%w[api embed]) &&
