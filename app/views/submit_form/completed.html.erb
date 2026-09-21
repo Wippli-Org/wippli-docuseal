@@ -1,4 +1,17 @@
-<div class="max-w-md mx-auto px-2 mt-12 mb-4">
+<%# Wippli: Send Only delivery - the sender finished their side by pressing Send and the
+    board lands here. Show the document they sent, not just a receipt card: the stamp and
+    any details they filled in are on it, and it is what they expect to see. Signature
+    deliveries keep the plain card. %>
+<% wippli_send_only = @submitter.metadata['wippli_delivery'] == 'send_only' %>
+<% wippli_document = wippli_send_only ? @submitter.documents.preload(:blob).first : nil %>
+<% if wippli_document %>
+  <div class="max-w-4xl mx-auto px-2 mt-6">
+    <iframe src="<%= ActiveStorage::Blob.proxy_url(wippli_document.blob, expires_at: 1.hour.from_now.to_i) %>"
+            title="<%= @submitter.submission.name || @submitter.submission.template.name %>"
+            class="w-full rounded-xl border border-base-300" style="height: 75vh"></iframe>
+  </div>
+<% end %>
+<div class="max-w-md mx-auto px-2 <%= wippli_document ? 'mt-6' : 'mt-12' %> mb-4">
   <div class="space-y-6 mx-auto">
     <div class="space-y-6">
       <div class="flex items-center justify-center">
@@ -29,8 +42,9 @@
           <div class="py-2"></div>
         <% end %>
       <% end %>
-      <%# Wippli: signers only get Download once every party has signed - a partially signed file is confusing %>
-      <% if (@submitter.completed_at > 30.minutes.ago && !@submitter.submission.submitters.exists?(completed_at: nil)) || (current_user && current_user.account.submitters.exists?(id: @submitter.id)) %>
+      <%# Wippli: signers only get Download once every party has signed - a partially signed file is confusing.
+          Send Only is the exception: nobody else signs, so the sender's copy is final the moment they send it. %>
+      <% if wippli_send_only || (@submitter.completed_at > 30.minutes.ago && !@submitter.submission.submitters.exists?(completed_at: nil)) || (current_user && current_user.account.submitters.exists?(id: @submitter.id)) %>
         <download-button data-src="<%= submitter_download_index_path(@submitter.slug) %>" class="base-button w-full">
           <span class="flex items-center justify-center space-x-2" data-target="download-button.defaultButton">
             <%= svg_icon('download', class: 'w-6 h-6') %>
