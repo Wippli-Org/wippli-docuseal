@@ -483,7 +483,9 @@ module Submissions
 
       # Wippli: AGPL-3.0 attribution footer
       composer.formatted_text(
-        [{ text: "Digitally signed via Wippli\u00AE Sign. Powered by DocuSeal under AGPL-3.0 licence." }],
+        # Wippli: Send Only delivery signs nothing - the footer must not say it did.
+        [{ text: "#{submission.submitters.any? { |s| s.metadata['wippli_delivery'] == 'send_only' } ? 'Sent' : 'Digitally signed'} " \
+                 "via Wippli\u00AE Sign. Powered by DocuSeal under AGPL-3.0 licence." }],
         font_size: 8,
         fill_color: '888888',
         text_align: :center,

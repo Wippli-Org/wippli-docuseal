@@ -715,7 +715,7 @@ module Submissions
       original_doc = submitter.submission.schema_documents.find { |d| d.uuid == uuid }
       original_sha256 = original_doc&.metadata&.dig('sha256') || original_doc&.checksum
 
-      attribution = "Digitally signed via Wippli\u00AE Sign"
+      attribution = "#{wippli_attribution_verb(submitter)} via Wippli\u00AE Sign"
       attribution += " | Original SHA256: #{original_sha256}" if original_sha256
       attribution += " | Powered by DocuSeal under AGPL-3.0 licence."
 
@@ -794,6 +794,13 @@ module Submissions
     end
     # rubocop:enable Metrics
 
+    # Wippli: Send Only delivery signs nothing - the footer must not say it did.
+    def wippli_attribution_verb(submitter)
+      send_only = submitter.submission.submitters.any? { |s| s.metadata['wippli_delivery'] == 'send_only' }
+
+      send_only ? 'Sent' : 'Digitally signed'
+    end
+
     def add_wippli_attribution_footer(pdf, submitter, original_uuid)
       # HexaPDF::Document::Pages is Enumerable (no #last); #[] accepts -1 for the last page.
       last_page = pdf.pages[-1]
@@ -802,7 +809,7 @@ module Submissions
       original_doc = submitter.submission.schema_documents.find { |d| d.uuid == original_uuid }
       original_sha256 = original_doc&.metadata&.dig('sha256') || original_doc&.checksum
 
-      footer_text = +"Digitally signed via Wippli\u00AE Sign"
+      footer_text = +"#{wippli_attribution_verb(submitter)} via Wippli\u00AE Sign"
       footer_text << " | Original SHA256: #{original_sha256}" if original_sha256
       footer_text << " | Powered by DocuSeal under AGPL-3.0 licence."
 
