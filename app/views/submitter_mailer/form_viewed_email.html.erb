@@ -7,4 +7,11 @@
   <p><strong><%= @submitter.name.presence || @submitter.email %></strong> has viewed <strong><%= @submission.name || @submission.template.name %></strong>.</p>
   <p>You will receive another notification once they have signed.</p>
 <% end %>
-<p><%= link_to submission_url(@submission), submission_url(@submission) %></p>
+<%# Wippli: the DocuSeal submission page enforces authenticate_user!, so a recipient
+    without a Wippli Sign account lands on "You need to sign in or sign up before
+    continuing." Link to the Wippli task board instead - it is reached with the
+    signing key, which every party already has. No board, no link. %>
+<% board_url = @submitter.metadata['wippli_guest_url'].presence %>
+<% if board_url %>
+  <p><%= link_to 'Open the task in Wippli', board_url %></p>
+<% end %>

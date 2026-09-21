@@ -1,4 +1,8 @@
 <p>Hi <%= @submitter.name.presence || 'there' %>,</p>
 <p><%= t('name_declined_by_submitter_with_the_following_reason', name: @submitter.submission.name || @submitter.submission.template.name, submitter: @submitter.name || @submitter.email || @submitter.phone) %></p>
 <%= simple_format(h(@submitter.submission_events.find_by(event_type: :decline_form).data['reason'])) %>
-<p><%= link_to submission_url(@submitter.submission), submission_url(@submitter.submission) %></p>
+<%# Wippli: the submission page requires a Wippli Sign login - link to the task board. %>
+<% board_url = @submitter.metadata['wippli_guest_url'].presence %>
+<% if board_url %>
+  <p><%= link_to 'Open the task in Wippli', board_url %></p>
+<% end %>

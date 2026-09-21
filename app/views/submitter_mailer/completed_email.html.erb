@@ -3,5 +3,9 @@
 <% else %>
   <p>Hi <%= @submitter.name.presence || 'there' %>,</p>
   <p><%= I18n.t(:name_has_been_completed_by_submitters, name: @submitter.submission.name || @submitter.submission.template.name, submitters: @submitter.submission.submitters.order(:completed_at).map { |e| e.name || e.email || e.phone }.uniq.join(', ')) %></p>
-  <p><%= link_to submission_url(@submitter.submission), submission_url(@submitter.submission) %></p>
+  <%# Wippli: the submission page requires a Wippli Sign login - link to the task board. %>
+  <% board_url = @submitter.metadata['wippli_guest_url'].presence %>
+  <% if board_url %>
+    <p><%= link_to 'Open the task in Wippli', board_url %></p>
+  <% end %>
 <% end %>
