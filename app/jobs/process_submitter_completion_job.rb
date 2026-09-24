@@ -136,15 +136,14 @@ class ProcessSubmitterCompletionJob
 
     return if configs.value['enabled'] == false
 
-    to = submitter.submission.submitters.reject { |e| e.preferences['send_email'] == false }
-                  .sort_by(&:completed_at).select(&:email?).map(&:friendly_name)
+    recipients = submitter.submission.submitters.reject { |e| e.preferences['send_email'] == false }
+                          .sort_by(&:completed_at).select(&:email?)
 
-    return if to.blank?
-
-    if configs.value['bcc_recipients'] == true
-      to.each { |to| SubmitterMailer.documents_copy_email(submitter, to:).deliver_later! }
-    else
-      SubmitterMailer.documents_copy_email(submitter, to: to.join(', ')).deliver_later!
+    # Wippli: one email per party, addressed to that party by name, never one shared email with
+    # every party in "To". The attachments stay those of `submitter` (the last to sign): only
+    # their documents carry every signature.
+    recipients.each do |recipient|
+      SubmitterMailer.documents_copy_email(submitter, recipient:).deliver_later!
     end
   end
 

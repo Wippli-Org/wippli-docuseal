@@ -134,9 +134,13 @@ class SubmitterMailer < ApplicationMailer
     end
   end
 
-  def documents_copy_email(submitter, to: nil, sig: false)
+  # `submitter` supplies the documents (the last signer's copy carries every signature);
+  # `recipient` is the party this email is addressed to and greets. They differ when one
+  # completion sends every party their own copy.
+  def documents_copy_email(submitter, to: nil, sig: false, recipient: nil)
     @current_account = submitter.submission.account
     @submitter = submitter
+    @recipient = recipient || submitter
     @sig = submitter.signed_id(expires_in: SIGN_TTL, purpose: :download_completed) if sig
 
     template_preferences = @submitter.template&.preferences || {}
@@ -159,15 +163,15 @@ class SubmitterMailer < ApplicationMailer
     @body = template_preferences['documents_copy_email_body'].presence
     @body ||= fetch_config_email_body(@email_config, @submitter)
 
-    assign_message_metadata('submitter_documents_copy', @submitter)
+    assign_message_metadata('submitter_documents_copy', @recipient)
     reply_to = build_submitter_reply_to(submitter, email_config: @email_config, documents_copy_email: true)
 
     I18n.with_locale(@current_account.locale) do
       subject =
-        @subject.present? ? ReplaceEmailVariables.call(@subject, submitter:) : I18n.t(:your_document_copy)
+        @subject.present? ? ReplaceEmailVariables.call(@subject, submitter: @recipient) : I18n.t(:your_document_copy)
 
       mail(from: from_address_for_submitter(submitter),
-           to: to || @submitter.friendly_name,
+           to: to || @recipient.friendly_name,
            reply_to:,
            subject:)
     end
