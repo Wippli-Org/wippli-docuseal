@@ -1,40 +1,58 @@
-<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: #f5f5f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-  <div style="background: white; border-radius: 12px; padding: 40px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); max-width: 400px; width: 100%; margin: 20px;">
-    <h2 style="margin: 0 0 8px 0; font-size: 22px; text-align: center; color: #1a1a1a;">Enter Signing Key</h2>
-    <p style="margin: 0 0 24px 0; font-size: 14px; text-align: center; color: #666;">Enter or paste the 6-digit key from your email</p>
+<style>
+  @font-face { font-family: 'IBM Plex Sans'; font-weight: 400; font-display: swap; src: url('/fonts/ibm-plex-sans-latin-400-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'IBM Plex Sans'; font-weight: 600; font-display: swap; src: url('/fonts/ibm-plex-sans-latin-600-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'IBM Plex Sans'; font-weight: 700; font-display: swap; src: url('/fonts/ibm-plex-sans-latin-700-normal.woff2') format('woff2'); }
+  html, body { margin: 0; background: #502E91; }
+  .wk-page { min-height: 100vh; box-sizing: border-box; padding: 12px; display: flex; flex-direction: column; gap: 12px; font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #333333; }
+  .wk-brand { background: #ffffff; border-radius: 20px; padding: 12px 20px; display: flex; align-items: center; }
+  .wk-card { flex: 1; background: #ffffff; border-radius: 20px; display: flex; align-items: center; justify-content: center; padding: 32px 20px; box-shadow: 0 8px 24px rgba(20, 8, 50, 0.18); }
+  .wk-inner { width: 100%; max-width: 420px; text-align: center; }
+  .wk-inner h2 { margin: 0 0 8px; font-size: 26px; font-weight: 600; color: #333333; }
+  .wk-inner p.wk-lead { margin: 0 0 28px; font-size: 15px; color: #666666; }
+  .wk-digits { display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; }
+  .key-digit { width: 48px; height: 58px; text-align: center; font-size: 24px; font-weight: 600; font-family: inherit; color: #333333; border: 2px solid #e6e1ef; border-radius: 14px; outline: none; transition: border-color 0.2s; }
+  .key-digit:focus { border-color: #CB007B; }
+  #submit-btn { width: 100%; padding: 14px; background: #CB007B; color: #ffffff; border: none; border-radius: 40px; font-family: inherit; font-size: 16px; font-weight: 700; letter-spacing: 0.02em; cursor: pointer; transition: background 0.2s; }
+  #submit-btn:hover { background: #A80066; }
+  .wk-hint { margin: 16px 0 0; font-size: 13px; color: #929293; }
+  .wk-error { background: #fdecf4; border: 1px solid #f2b6d4; border-radius: 14px; padding: 12px; margin-bottom: 16px; color: #A80066; font-size: 14px; }
+  .wk-foot { text-align: center; color: rgba(255, 255, 255, 0.85); font-size: 12px; letter-spacing: 0.02em; }
+  @media (min-width: 720px) { .wk-page { padding: 20px; gap: 20px; } .wk-brand { justify-content: center; padding: 14px 28px; } }
+</style>
+<div class="wk-page">
+  <div class="wk-brand"><%= render 'shared/logo', height: '28' %></div>
+  <div class="wk-card">
+    <div class="wk-inner">
+      <h2>Enter Signing Key</h2>
+      <p class="wk-lead">Enter or paste the 6-digit key from your email</p>
 
-    <% if @error.present? %>
-      <div style="background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 12px; margin-bottom: 16px; text-align: center; color: #dc2626; font-size: 14px;">
-        <%= @error %>
-      </div>
-    <% end %>
+      <% if @error.present? %>
+        <div class="wk-error"><%= @error %></div>
+      <% end %>
 
-    <form id="signing-key-form" onsubmit="return false;">
-      <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 24px;">
-        <% 6.times do |i| %>
-          <input
-            type="text"
-            maxlength="1"
-            inputmode="numeric"
-            pattern="[0-9]"
-            class="key-digit"
-            data-index="<%= i %>"
-            autocomplete="off"
-            style="width: 48px; height: 56px; text-align: center; font-size: 24px; font-weight: 600; border: 2px solid #d1d5db; border-radius: 8px; outline: none; transition: border-color 0.2s;"
-            onfocus="this.style.borderColor='#3b82f6'"
-            onblur="this.style.borderColor='#d1d5db'"
-            <%= 'autofocus' if i == 0 %>
-          >
-        <% end %>
-      </div>
-      <input type="hidden" id="signing-key-hidden" value="">
-      <button type="button" id="submit-btn" style="width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
-        Open Document
-      </button>
-    </form>
+      <form id="signing-key-form" onsubmit="return false;">
+        <div class="wk-digits">
+          <% 6.times do |i| %>
+            <input
+              type="text"
+              maxlength="1"
+              inputmode="numeric"
+              pattern="[0-9]"
+              class="key-digit"
+              data-index="<%= i %>"
+              autocomplete="off"
+              <%= 'autofocus' if i == 0 %>
+            >
+          <% end %>
+        </div>
+        <input type="hidden" id="signing-key-hidden" value="">
+        <button type="button" id="submit-btn">Open Document</button>
+      </form>
 
-    <p style="margin: 16px 0 0 0; font-size: 12px; text-align: center; color: #999;">You can also paste all 6 digits at once</p>
+      <p class="wk-hint">You can also paste all 6 digits at once</p>
+    </div>
   </div>
+  <div class="wk-foot">Via Wippli&reg; Sign. Powered by DocuSeal under AGPL-3.0 licence.</div>
 </div>
 
 <script>
