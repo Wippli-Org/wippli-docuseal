@@ -1,10 +1,18 @@
 <p>
   ---
 </p>
+<%# Wippli: two logos, the mail client shows one. Light (purple wordmark) by default; the negative (white wordmark,
+    orange SIGN unchanged) when the reader is in dark mode: Apple Mail / iOS / Gmail via prefers-color-scheme in the
+    layout's style block, Outlook via its [data-ogsc] hook. Clients that understand neither keep the light logo. %>
 <p>
   <img src="<%= Docuseal::DEFAULT_APP_URL %>/wippli-sign-logo-email.png"
-       width="160" height="28" alt="<%= Docuseal.product_name %>"
-       style="display:block;border:0;outline:none;text-decoration:none;">
+       width="160" height="28" alt="<%= Docuseal.product_name %>" class="wippli-logo-light"
+       style="display:block;border:0;outline:none;text-decoration:none;max-width:100%;height:auto;">
+  <!--[if !mso]><! -->
+  <img src="<%= Docuseal::DEFAULT_APP_URL %>/wippli-sign-logo-email-dark.png"
+       width="160" height="28" alt="<%= Docuseal.product_name %>" class="wippli-logo-dark"
+       style="display:none;border:0;outline:none;text-decoration:none;max-width:100%;height:auto;mso-hide:all;">
+  <!--<![endif]-->
 </p>
 <p>
   Via Wippli&reg; Sign. Powered by DocuSeal under AGPL-3.0 licence.
