@@ -3,7 +3,18 @@
   <head>
     <title></title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="color-scheme" content="light dark">
+    <meta name="supported-color-schemes" content="light dark">
     <style></style>
+    <%# Wippli: left alone by premailer (data-premailer="ignore") so the dark-mode rules reach the client. %>
+    <style data-premailer="ignore">
+      @media (prefers-color-scheme: dark) {
+        .wippli-logo-light { display: none !important; }
+        .wippli-logo-dark { display: block !important; }
+      }
+      [data-ogsc] .wippli-logo-light { display: none !important; }
+      [data-ogsc] .wippli-logo-dark { display: block !important; }
+    </style>
   </head>
   <body dir="<%= TextUtils.rtl?(yield) ? 'rtl' : 'auto' %>">
     <%= yield %>
